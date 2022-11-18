@@ -1,0 +1,239 @@
+begin
+htp.p('
+<table id="example" class="table table-striped table-bordered" style="width:100%">
+    <thead>
+        <tr> 
+            <th>ID</th> 
+            <th>First Name</th> 
+            <th>Last Name</th>
+            <th>Email</th>
+        </tr>
+    </thead>
+    <tbody>'); 
+
+    for i in(select * from HRD.PA_PORTAL_PATIENT_FEEDBACK)
+    loop
+
+        htp.p('
+        <tr>
+            <td>'||i.PATIENT_FEEDBACK_ID||'</td>
+            <td>'||i.PA_PARAMETER_ID||'</td>
+            <td>'||i.TRANS_DATE||'</td>
+            <td>'||i.PATIENT_MRNO||'</td>
+<td> <input type="text" value='||i.PATIENT_MRNO||'>'||i.PATIENT_MRNO||'</td>
+        </tr>');
+    end loop;
+    htp.p('
+    <tbody>
+</table>');
+end;
+ <td>'||i.PA_PARAMETER_ID||'</td>
+ <td>'||j.PA_RATING_VALUE_ID||'</td>
+
+
+
+
+
+var nameValue = document.getElementById("qid").value;
+
+
+
+for (let row of mytab1.rows) 
+{
+   
+var nameValue = document.getElementById("qid").value;
+console.log(nameValue)
+    for(let cell of row.cells) 
+    {
+       console.log(cell.innerText)
+    }
+}
+
+
+ var questionNo=0;
+
+$('.my-class').each(function(){ 
+  var textVal = $(this).val(); 
+  var questionNo=textVal;
+  //debugger;
+  //console.log(textVal); 
+  // nameValue =  $("input[type='radio']:checked").val();
+  nameValue= $('input[name='+questionNo+']:checked').val();
+ //console.log(nameValue);
+
+}); 
+-------------------------------------------------------------------------next code------------------------------------------
+Get Maximum ID:
+on DEV
+SELECT (NVL(MAX(PATIENT_FEEDBACK_ID),0)) + 1 
+          FROM HRD.PA_PORTAL_PATIENT_FEEDBACK;
+on APEX:
+SELECT (NVL(MAX(PATIENT_FEEDBACK_ID),0)) + 1 
+        INTO MAXID FROM HRD.PA_PORTAL_PATIENT_FEEDBACK;
+-------------------------------------------------Duynmaic Content--------------------------------
+
+begin
+htp.p('
+<form id="feedbk">
+<table name="mytab" id="myform" class="table table-striped table-bordered yourTable" style="width:100%">
+    <thead>
+        <tr> 
+            <th>Questions:</th> 
+        </tr>
+    </thead>
+    <tbody>'); 
+
+    for i in (select * from HRD.PA_DEF_SECTION_PARAMETER P WHERE P.PA_SECTION_ID = 30 
+                                    AND P.ACTIVE = 'Y' ORDER BY PA_PARAMETER_ID Asc)
+    loop
+        htp.p('
+        <tr>
+           
+            <td> <input type="hidden" class="my-class" id="qid" value='||i.PA_PARAMETER_ID||' ><b>'||i.PA_PARAMETER_ID||': '||i.PA_PARAMETER_NAME||'</b></td>
+
+        </tr>');
+
+   for j in(select * from HRD.PA_DEF_RATING_VALUE V  WHERE V.PA_RATING_TYPE_ID = 23
+                                                     AND V.ACTIVE = 'Y')
+     loop
+        htp.p('
+        <tr>
+           
+             <td> </label><input type="radio"  class="my-cls" name='||i.PA_PARAMETER_ID||'  value='||j.PA_RATING_ACTUAL_VALUE||' required> '||j.DESCRIPTION||'</td>
+             
+        </tr>');
+    end loop; --inner loop
+
+    end loop; --outer loop 
+
+
+    htp.p('
+    <tbody>
+</table>
+
+ <div class="col-md-12 text-center">
+ <button type="button" id="btn-submit" class="btn btn-primary mb-3" float-right>Submit</button>
+        </div>
+</form>
+');
+end;
+------------------------------------------Javascript Code------------------------------------
+ var questionNo=0;
+let url = $v("feedback-attempt");
+ var arrf01 = [];
+ var arrf02 = [];
+
+$('.my-class').each(function(){ 
+  var textVal = $(this).val(); 
+  var questionNo=textVal;
+  arrf01.push($(this).val());
+
+  nameValue= $('input[name='+questionNo+']:checked').val();
+    
+   arrf02.push(nameValue);
+   console.log("question "+ questionNo +" option "+nameValue)
+
+}); 
+// if (arrf02 == undefined) alert("Must check All options!");
+// else{
+apex.server.process("SaveFeedbackProcess", {
+
+     f01: arrf01,
+     f02: arrf02
+
+ },
+
+ { 
+    dataType: 'text',
+    success: function(data)  {
+        //alert(typeof(data.status));
+        if(data.message == 'success'){
+        alert(data);
+        }
+        else
+          alert(data);
+          //apex.navigation.redirect ( "f?p=107:13:&APP_SESSION.:::::" );
+        //alert("Feedback Saved Successfully.");
+        //apex.message.showPageSuccess( "Your Feedback Saved Successfully." );
+       // apex.navigation.redirect(url);
+      }
+      
+    
+
+});
+//}
+------------------------------------------Ajax Process--------------------------------
+DECLARE MAXID NUMBER :=0;
+QUESID NUMBER :=0;
+ OPTID NUMBER :=0;
+--Ques_count   number   :=APEX_APPLICATION.g_f01.count();
+
+BEGIN
+ FOR i IN 1 ..10
+  LOOP
+SELECT (NVL(MAX(PATIENT_FEEDBACK_ID),0)) + 1 
+        INTO MAXID
+                     FROM HRD.PA_PORTAL_PATIENT_FEEDBACK;
+  apex_json.open_object;
+  apex_json.write( p_name => 'status', p_value => 'success');
+ -- apex_json.write('Question', APEX_APPLICATION.g_f01(i));
+  --apex_json.write('Option', APEX_APPLICATION.g_f02(i));
+  apex_json.close_object;
+
+
+--  APEX_APPLICATION.g_f01(i);
+--   APEX_APPLICATION.g_f02(i);
+
+    HIS.MESSAGE_ENTRY_CATEGORY('MAXID:'||MAXID||
+                              'APEX_APPLICATION.g_f01(i) Question : '||APEX_APPLICATION.g_f01(i)||
+                              'APEX_APPLICATION.g_f02(i) options :  '||APEX_APPLICATION.g_f02(i),  'FK_PA_DEF_SECTION_PARAMETER');
+QUESID:= APEX_APPLICATION.G_F01(i);
+OPTID := APEX_APPLICATION.G_F02(i);
+INSERT INTO HRD.PA_PORTAL_PATIENT_FEEDBACK
+  (PATIENT_FEEDBACK_ID,
+   PA_SECTION_ID,
+   PA_PARAMETER_ID,
+   PA_RATING_VALUE_ID,
+   PA_RATING_TYPE_ID,
+   TRANS_DATE,
+   PATIENT_MRNO,
+   DOCTOR_MRNO,
+   CLINIC_ID,
+   SR_NO,
+   PA_PERFORM_ID,
+   USER_ID)
+VALUES
+  (MAXID,
+   30,
+    RTRIM(LTRIM(QUESID)),
+    RTRIM(LTRIM(OPTID)),
+   8,
+   sysdate,
+   '00160000003821',
+   NULL,
+   NULL,
+   NULL,
+   NULL,
+   NULL);
+
+  END LOOP;
+ commit;
+EXCEPTION
+WHEN OTHERS THEN
+HIS.MESSAGE_ENTRY_CATEGORY('MAXID:'||MAXID||
+                              'APEX_APPLICATION.g_f01(i) Question : '||QUESID||
+                              'APEX_APPLICATION.g_f02(i) options :  '||OPTID,  'EXP_FK_PA_DEF_SECTION_PARAMETER');
+
+END;
+------------------------PL/SQL Testing---------------------------------
+
+DELETE FROM HIS.MESSAGES S WHERE S.CATEGORY='FK_PA_DEF_SECTION_PARAMETER'; 
+DELETE FROM HIS.MESSAGES S WHERE S.CATEGORY='EXP_FK_PA_DEF_SECTION_PARAMETER';
+----
+SELECT * FROM HIS.MESSAGES S WHERE S.CATEGORY='FK_PA_DEF_SECTION_PARAMETER';
+DELETE FROM HIS.MESSAGES S WHERE S.CATEGORY='FK_PA_DEF_SECTION_PARAMETER';
+
+
+
+testing
+SELECT *  from his.messages m where m.category='REPORTS_APEX1';
