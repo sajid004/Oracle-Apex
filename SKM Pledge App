@@ -1,0 +1,172 @@
+apex.debug.log("message");
+
+var txt = apex.item("P10_Name").getValue();
+
+apex.item("P10_Name").setValue("222");
+
+$s("P10_Name","222");
+
+apex.debug.log("message "+ $v("P10_Name"));
+
+id="his.USERS#ID#"
+his.USERS&P1047_EMPNO.
+
+for selected in dropdown
+select donation_type_id||donation_group_id as DOnation_key from table(marketing.pkg_donor_donation .DONATION_TYPE)
+where donation_type_id=:P1_DONATION_TYPE_ID
+and donation_group_id=:P1_DONATION_GROUP_ID
+
+for composite key
+select donation_type, donation_type_id||donation_group_id as Donation_Key from table(marketing.pkg_donor_donation .DONATION_TYPE);
+for spilt value
+select  donation_type_id,donation_group_id  from  table(marketing.pkg_donor_donation.DONATION_TYPE) l where l.donation_type_id||l.donation_group_id=133 ;
+
+CSS:
+report backgroun color:
+#LocationRep th {background-color: #aaccff}
+
+Step 4: Add CSS to the page in inline CSS section. It will change the color of the rows alternatively.
+
+For Interactive Grid:
+
+#AlternateRowIG .a-GV-table tr:nth-child(even)  .a-GV-cell {
+    background-color: lightgreen;
+}
+#AlternateRowIG .a-GV-table tr:nth-child(odd)  .a-GV-cell {
+    background-color: lightyellow;
+}
+
+For Interactive Report:
+
+#AlternateRowIR .a-IRR-table tr:nth-child(odd) td {
+     background-color: #DBE5F1;
+}
+
+#AlternateRowIR .a-IRR-table tr:nth-child(even) td {
+     background-color: white;
+}
+----------------------------------------------------------------------------------------
+
+db19c=
+(DESCRIPTION=
+(ADDRESS=
+(PROTOCOL=TCP)
+(HOST=192.192.9.098)
+(PORT=1521)
+)
+(CONNECT_DATA=
+(SERVER=dedicated)
+(SERVICE_NAME=legacy)
+)
+)
+---------------------------------------
+------------------------------------------
+SELECT *  from his.messages m where m.category='REPORTS_APEX1';------------
+
+INSERT INTO OEHR_DEPARTMENTS  (DEPARTMENT_ID, DEPARTMENT_NAME) 
+ VALUES(:P22_DEPARTMENT_ID, :P22_DEPARTMENT_NAME );
+
+Source Code:
+Login page logo code:
+
+span.t-Login-logo
+{ 
+background-image: url(#APP_IMAGES#0657c82b-8707-4519-9edd-a3ce2c9c4d9c.png);
+background-size: cover;
+width: 200px;
+height :200px;
+}
+
+Login page background image code:
+.t-Login-container
+{
+background-image: url(#APP_IMAGES#new.jpg);
+}
+
+
+----------
+
+FUNCTION user_aut    (
+    
+ p_username IN VARCHAR2, --User_Name
+ p_password IN VARCHAR2 -- Password    
+)
+ RETURN BOOLEAN
+AS
+ lc_pwd_exit VARCHAR2 (1);
+BEGIN
+ -- Validate whether the user exits or not
+ SELECT 'Y'
+ INTO lc_pwd_exit
+ FROM users
+ WHERE upper(LOG_IN) = UPPER (p_username) AND LOG_PAS = p_password and status='Y' 
+;
+RETURN TRUE;
+EXCEPTION
+ WHEN NO_DATA_FOUND
+ THEN
+ RETURN FALSE;
+END user_aut;
+===================
+DONATION_GROUP_ID:P1_NEW
+.t-Login-container{
+    background-image: url('#APP_IMAGES#Background for Login.jpg');
+    background-repeat : no-repeat;
+    background-size : cover;
+}
+
+.t-Login-region .t-Login-body .t-Form-fieldContainer:not(.t-Form-fieldContainer--floatingLabel) .apex-item-text {
+    font-size: 16px;
+    padding: 4px 36px;
+    height: 40px;
+    border-radius: 20px;
+}  
+
+.a-Button--hot, .t-Button--hot:not(.t-Button--simple), body .ui-button.ui-button--hot, body .ui-state-default.ui-priority-primary {
+    background-color: #0c0b0b;
+    color: #f9f9f9;
+    border-radius: 15px;
+}
+
+.a-Button--hot:hover, .a-Button--hot:not(:active):focus, .t-Button--hot:not(.t-Button--simple):hover, .t-Button--hot:not(.t-Button--simple):not(:active):focus, body .ui-button.ui-button--hot:hover, body .ui-button.ui-button--hot:not(:active):focus, body .ui-state-default.ui-priority-primary:hover, body .ui-state-default.ui-priority-primary:not(:active):focus {
+   background-color: #363b40;
+}
+
+
+
+
+
+
+
+
+
+span.t-Login-logo { 
+background-image: url(#APP_IMAGES#skmlogo.png);
+background-size: cover;
+width: 200px;
+height :200px;
+
+
+
+CSS Code : 
+--For Login page logo
+span.t-Login-logo { 
+background-image: url(#APP_IMAGES#wm_logon_logo.jpg);
+background-size: cover;
+width: 200px;
+height :200px;
+}
+--For Login Page background
+.t-PageBody--login {
+background-image:url(#APP_IMAGES#skmb.png);
+background-repeat: no-repeat;
+background-size : cover;
+background-position: center;
+}
+
+
+
+
+
+
+
