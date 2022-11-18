@@ -1,0 +1,30 @@
+begin
+his.message_entry_category('mrno','visit confirm mrno');
+end;
+
+select * from his.messages s where s.category='visit confirm mrno'
+delete from his.messages s where s.category='visit confirm mrno'
+
+begin
+his.message_entry_category(V_MR_NO,'visit confirm mrno');
+his.message_entry_category(V_DOCTOR_ID,'visit confirm mrno');
+end;
+
+FOR i in 1..APEX_APPLICATION.G_F01.COUNT LOOP 
+V_Urgent:='N';
+
+FOR J in 1..APEX_APPLICATION.G_F02.COUNT LOOP 
+begin
+his.message_entry_category(APEX_APPLICATION.G_F02(J),'visit confirm mrno urgent');
+IF APEX_APPLICATION.G_F01(i)=APEX_APPLICATION.G_F02(j) then
+V_Urgent:='Y';
+end if;
+END ;
+end loop;
+begin
+his.message_entry_category(APEX_APPLICATION.G_F01(i)||' URGENT IS '||V_Urgent,'URGENT');
+END ;
+
+---------------
+Get Maximum id:
+SELECT NVL(MAX(SR_NO), 0) + 1 INTO V_SR_NO FROM REGISTRATION.SCHEDULE;
