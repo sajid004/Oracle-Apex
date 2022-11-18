@@ -1,0 +1,109 @@
+Date Format on APEX:--
+P_FROM_DATE => to_date(:P4_FROM_DATE,'dd-mon-rrrr'),
+P_TO_DATE => to_date(:P4_TO_DATE,'dd-mon-rrrr') + 1,
+TO_DATE(:P4_FROM_DATE,'DD-MM-RRRR HH24:MI:SS'),
+
+Date Format on DEV:--
+P_FROM_DATE => to_date('02-mar-22','dd-mon-rrrr'),
+P_TO_DATE => to_date('14-Apr-22 23:59:59','dd-mon-rrrr hh24:mi:ss'),
+------------------------------
+Role wise Login:
+DECLARE
+  V_CLIENT_ID VARCHAR2(20) := NVL('0010200001','0010200008');
+  V_ALLOWED   BOOLEAN := FALSE;
+  V_COUNT NUMBER:=0;
+BEGIN
+  SELECT COUNT(1)  FROM  DEFINITIONS.CLIENT_EXCEL_REPORT_TASK WHERE ACTIVE = 'Y' 
+AND CLIENTID <>'0010200008' AND CLIENTID='0012000045';
+  IF V_COUNT>0 THEN
+    dbms_output.put_line('allowed '||v_count);
+    V_ALLOWED := TRUE;
+  
+  END IF;
+  --RETURN V_ALLOWED;
+END;
+------------------------------
+Fetch First Record:
+where rownum = 1;
+------------------------------
+Switch Case
+CASE SEX_ID WHEN 1 THEN '#APP_FILES#male.png ' WHEN 2 THEN '#APP_FILES#female.png ' END AS ICON
+------------------------------
+Multiple Coditions Based Card button Show:
+BEGIN
+IF :IS_PDF ='Y' AND :STATUS_ID='015' THEN
+RETURN TRUE;
+ELSE
+RETURN FALSE;
+END IF;
+END;
+--------------------------------
+
+p_to_date =>to_date(:P22_TO_DATE,'DD-MON-RRRR'),
+
+ <img class="card-img-top" src="#APP_FILES#male.png" alt="Card image cap">
+begin
+htp.p('
+
+<div style="overflow-x:auto;">
+<table class="table table-responsive">
+
+    <tbody>'); 
+--his.message_entry_category(':P6_FROM_DATE'||:P6_FROM_DATE||':P6_TO_DATE'||:P6_TO_DATE||':P6_FLIGHT_DATE'||:P6_FLIGHT_DATE,'APEX AIRLINE');
+    for i in (SELECT PATIENT_NAME,
+       PNR_NO,
+       CNIC,
+       PASSPORT_NUMBER,
+       MRNO,
+       FLIGHT_NO,
+       FLIGHT_DATE,
+       CONTACT_NO,
+       RESULT_DATE,
+       RESULT_STATUS,
+       TICKET_NO,
+       PDF_PATH
+  FROM TABLE(ORDERENTRY.PKG_ORDER_CPT_PNR.F_ORDER_CPT_PNR(P_MRNO                 => NULL,
+                                                          P_PASSPORT_NO          => :P6_PASSPORT_NO,
+                                                          P_CNIC_NO              => :P6_CNIC,
+                                                          P_PNR_NO               => :P6_PNR_NO,
+                                                          P_FROM_DATE            => TO_DATE(:P6_F_DATE,'DD-Mon-YYYY'),--'01-MAR-2022',
+                                                          P_TO_DATE              => TO_DATE(:P6_T_DATE,'DD-Mon-YYYY'),--'31-MAR-2022',
+                                                          P_CLIENT_ID            => '0010200001',
+                                                          P_FLIGHT_NO            => :P6_FLIGHT_NO,
+                                                          P_FLIGHT_DATE          => TO_DATE(:P6_FLIGHT_DATE,'DD-Mon-YYYY'),
+                                                          P_CONTACT_NO           => :P6_CONTACT_NO,
+                                                          P_TICKET_NO            => :P6_TICKET_NO,
+                                                          P_FINAL_DESTINATION_ID => NULL)))
+    loop
+        htp.p('
+        <tr>
+       
+           <td><img src="'||'#APP_FILES#male.png'||'"></td><td><b>'||i.PATIENT_NAME||'</b><br><label>PNR # </label>'||i.PNR_NO||'<br><label>CNIC # </label>'||i.CNIC||'<br>
+            <label>Passport # </label> '||i.PASSPORT_NUMBER||'   
+           </td>
+
+           <td class="spacer"><b><label>MRNO # </label>'||i.MRNO||'</b><br><label>Flight # </label>'||i.FLIGHT_NO||'<br><label>Flight Date : </label>'||i.FLIGHT_DATE||'<br>
+             <label>Contact # </label>'||i.CONTACT_NO||'   
+           </td>
+
+            <td class="spacer"><b>'||i.RESULT_DATE||'</b><br>'||i.RESULT_STATUS||'<br><label>Ticket No # </label> '||i.TICKET_NO||'   
+           </td>
+
+            <td class="spacer"><a href="PDF_PATH"type="submit" >View Report</a></td>
+
+        </tr>
+     <tr>
+     <hr>
+         </tr>
+        ');
+  
+    end loop; --loop 
+
+
+    htp.p('
+    <tbody>
+</table>
+</div>
+
+');
+end;
