@@ -1,0 +1,421 @@
+
+
+Case 1 Already Registered but no login user
+
+
+
+1":CALL THIS procedure after providing all parameters 
+
+begin security.pkg_authentication.p_generate_pin_code
+
+2:After providing PIN CODE CALL THIS PROCEDURE
+
+security.pkg_authentication.P_GEN_PATIENT_USER
+
+
+Case 2 New Registration
+
+java script
+
+<af:resource type="javascript">
+                  function maskCNICInput() {
+                 
+                      $('input[name="inputText3"]').mask('00000-0000000-0');
+                     
+                  }
+                 
+                </af:resource>
+
+
+1:YEAR LOV QUERY
+
+select t.year_id, t.description 
+  from definitions.def_years t 
+ order by t.year_id desc 	
+
+2:Marital status lov
+
+SELECT M.MARITAL_STATUS_ID,M.DESCRIPTION,M.STATUS FROM DEFINITIONS.MARITAL_STATUS  M   WHERE   M.ACTIVE = 'Y'
+
+
+3:To encrypt password
+
+his.get_enc_pass
+
+4:Validate PHONE NUMBER
+
+his.pkg_s02frm00118_no.validate_phone_number
+
+
+5:calculate age
+his.pkg_age.age_complete_long
+
+6:to register patient registration.pkg_s02pro00042.p_new_registration_portal
+
+
+Validations before call  registration.pkg_s02pro00042.p_new_registration_portal
+
+    public void signUpNewRegisteration( ActionEvent ae)
+    {
+        System.out.println("Method called");
+
+        
+        if (this.pname == null || this.pname.equalsIgnoreCase("")) {
+            this.setMessage("Name must be entered");
+            captcha = "";
+            return;
+        }
+        if (this.CNIC == null || this.CNIC.equalsIgnoreCase("")) {
+            this.setMessage("CNIC must be entered");
+            captcha = "";
+            return;
+        } else {
+
+            StringTokenizer t = new StringTokenizer(this.CNIC, "-");
+            if (t.countTokens() == 1) {
+                System.out.println("cnic dont have -");
+                if (this.CNIC.length() == 13) {
+                    System.out.println("length =13");
+                    this.orginalCNIC = this.CNIC;
+                    String first = this.CNIC.substring(0, 5);
+                    String second = this.CNIC.substring(5, 12);
+                    String third = this.CNIC.substring(12, 13);
+                    this.CNIC = first + "-" + second + "-" + third;
+                    System.out.println("MODIFIED CNIC " + this.CNIC);
+                } else {
+                    this.setMessage("Enter valid CNIC");
+                    captcha = "";
+                    return;
+                }
+            } else {
+                if (this.CNIC.length() == 15) {
+                    System.out.println("CNIC =15");
+                    String first = CNIC.substring(0, 5);
+                    String second = CNIC.substring(6, 13);
+                    String third = CNIC.substring(14, 15);
+                    this.orginalCNIC = first + second + third;
+                } else {
+                    this.setMessage("Enter valid CNIC");
+                    captcha = "";
+                    return;
+                }
+            }
+
+            boolean isValid = ADFUtils.isDataValid(this.CNIC, "^[0-9+]{5}-[0-9+]{7}-[0-9]{1}$");
+            System.out.println(this.CNIC + " is " + isValid);
+            if (!isValid) {
+                this.setMessage("CNIC must be entered");
+                captcha = "";
+                return;
+            }
+        }
+        
+        if (!RestUtility.isNotNull(this.gender)) {
+            this.setMessage("Choose gender from list");
+            captcha = "";
+            return ;
+        }
+        if (!RestUtility.isNotNull(this.maritalStatus)) {
+            this.setMessage("Choose marital status from list");
+            captcha = "";
+            return ;
+        }
+        
+        if( this.gender.equals("1") || ( this.gender.equals("2") && (!this.maritalStatus.equals("001001")) ))
+        if (!RestUtility.isNotNull(this.fatherName)) {
+            this.setMessage("Father Name must be entered");
+            captcha = "";
+            return ;
+        }
+        
+        if( this.gender.equals("2") && this.maritalStatus.equals("001001") )
+        if (!RestUtility.isNotNull(this.husbandName)) {
+            this.setMessage("Husband Name must be entered");
+            captcha = "";
+            return ;
+        }
+        if( !RestUtility.isNotNull(this.year)){
+          this.setMessage("Year must be entered");
+            captcha = "";
+            return ;
+        }
+        if( !RestUtility.isNotNull(this.moth)){
+          this.setMessage("Month must be entered");
+            captcha = "";
+            return ;
+        }
+        if( !RestUtility.isNotNull(this.day)){
+          this.setMessage("Day must be entered");
+            captcha = "";
+            return ;
+        }
+        
+        try {
+            //Date Of Birth Validation
+           Date currdate = Calendar.getInstance().getTime();
+            DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+            String cDate = dateFormat.format(currdate);
+            String dob = day + "/" + moth + "/" + year;
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+            Date currentDate = sdf.parse(cDate);
+            Date nDOB = sdf.parse(dob);
+            if(nDOB.after(currentDate)){
+                this.setMessage("Kindly enter correct Date Of Birth.");
+                captcha = "";
+                  return ;
+            }
+        } catch (ParseException pe) {
+            // TODO: Add catch code
+            pe.printStackTrace();
+        }
+        
+        if( !RestUtility.isNotNull(this.address)){
+          this.setMessage("Address must be entered");
+            captcha = "";
+            return ;
+        }
+        
+        if (this.contactNo == null || this.contactNo.equalsIgnoreCase("")) {
+            this.setMessage("Contact no must be entered");
+            captcha = "";
+            return;
+        } else {
+
+
+            try {
+                String input = null;
+                String areaCode = null;
+                String countryCode = "92";
+
+                if (this.contactNo.length() == 10) {
+
+                    areaCode = this.contactNo.substring(0, 3);
+                    input = contactNo.substring(3);
+                } else if (this.contactNo.length() == 11) {
+
+                    areaCode = this.contactNo.substring(0, 4);
+                    input = contactNo.substring(4);
+
+
+                } else {
+                    this.setMessage("Enter valid contact no ");
+                    captcha = "";
+                    return;
+                }
+                OperationBinding oper =
+                    (OperationBinding) BindingContainer.getBindingContainer()
+                    .getOperationBinding("validatePhoneNumber");
+
+
+                Map map = oper.getParamsMap();
+
+                map.put("p0", input);
+                map.put("p1", areaCode);
+                map.put("p2", countryCode);
+                messageStyle = "color:Red;font-weight:bold;";
+                String[] retmob = (String[]) oper.execute();
+                
+                if (this.getErrorLogStatus().equalsIgnoreCase("N")){
+                    
+                if (retmob[1].trim().equalsIgnoreCase("Y")) {
+                    this.setMessage(retmob[0]);
+                    captcha = "";
+                    return;
+                }
+                }
+
+            } catch (Exception e) {
+                // TODO: Add catch code
+                e.printStackTrace();
+                this.setMessage("Unable to validate contact no " + this.contactNo);
+                captcha = "";
+                return;
+            }
+        }
+       // if(registerInPortalFlag)
+       // {
+            if (this.signUpPassword == null || this.signUpPassword.equalsIgnoreCase("")) {
+                this.setMessage("Password must be entered");
+                captcha = "";
+                return;
+            } else {
+                //^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$
+    
+                boolean isValid =
+                    ADFUtils.isDataValid(this.signUpPassword, "^(?=.*[0-9])(?=.*[!@#$%^&*])[a-zA-Z0-9!@#$%^&*]{7,15}$");
+                System.out.println(this.signUpPassword + " is " + isValid);
+                if (!isValid) {
+                    this.setMessage("Password must contain alphanumeric and special characters ");
+                    captcha = "";
+                    return;
+                }
+            }
+            if (confirmPass == null || this.confirmPass.equalsIgnoreCase("")) {
+                this.setMessage("Confirm password must be entered");
+                captcha = "";
+                return;
+            }
+            if (!this.signUpPassword.equals(this.confirmPass)) {
+                this.setMessage("Password does not match");
+                captcha = "";
+                return;
+            }
+       // }
+        if (this.captcha != null && !this.captcha.equalsIgnoreCase("")) {
+            FacesContext ctx = FacesContext.getCurrentInstance();
+
+            ///BindingContainer.executeMethod("setContext");
+            ExternalContext ectx = ctx.getExternalContext();
+            HttpServletRequest request = (HttpServletRequest) ectx.getRequest();
+
+            Captcha captcha = (Captcha) ectx.getSessionMap().get(Captcha.NAME);
+            try {
+                request.setCharacterEncoding("UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                System.out.println("UTF not supported !");
+            }
+
+            if (!captcha.isCorrect(this.captcha)) {
+                this.setMessage("Wrong captcha.Please try again.");
+                this.captcha = "";
+                return ;
+            }
+        }
+        else
+        {
+            this.setMessage("Captcha must be entered");
+            return;
+        }
+        this.captcha = "";
+        String dob = "";
+        Date dateOfBirth = null; 
+        try {
+            dob = this.day + "/" + this.moth + "/" + this.year;
+            dateOfBirth = new SimpleDateFormat("dd/MM/yyyy").parse(dob);
+            parsePatientName();
+        } catch (Exception e) {
+            // TODO: Add catch code
+            e.printStackTrace();
+        }
+     
+            OperationBinding oper =
+                (OperationBinding) BindingContainer.getBindingContainer().getOperationBinding("registerNewPatient");
+
+
+            Map map = oper.getParamsMap();
+
+            
+            map.put("firstName", this.firstName);
+            map.put("middleName", this.middleName);
+            map.put("lastName", this.lastName);
+            map.put("fullName", this.pname);
+            map.put("cnic", this.CNIC);
+            map.put("sexId", this.gender); //help sysetm to understand between new user creation and just rest password
+            map.put("dob", dateOfBirth);
+            map.put("maritalStatus", this.maritalStatus);
+            map.put("address", this.address);
+            map.put("contactNo", this.contactNo);
+            map.put("password", this.signUpPassword); 
+            map.put("fatherName", this.fatherName);
+            map.put("husbandName", this.husbandName);
+             
+           
+            String[] flag = (String[]) oper.execute();
+        
+        
+        if (this.getErrorLogStatus().equalsIgnoreCase("N")) {   
+            if (flag[0] != null) {
+                if (flag[0].equalsIgnoreCase("Y")) {
+                  //success
+                  messageStyle = "color:Green;font-weight:bold;";
+                    this.setMessage(flag[1]);
+                    resetInputField();
+                } else {
+                    //failure
+                    messageStyle = "color:Red;font-weight:bold;";
+                    this.setMessage(flag[1]);
+                }
+            }
+            System.out.println(" " + flag);
+        
+        }        
+    }
+    
+
+
+--     public String[] registerNewPatient(String firstName, String middleName, String lastName, String fullName, String cnic, 
+                                       String sexId,  Date dob, String maritalStatus, String address, String contactNo,
+                                        String password, String fatherName, String husbandName) {
+        String[] success = new String[2];
+        setContext("ORGANIZATION_ID", "SKM");
+        setContext("LOCATION_ID", "001");
+        setContext("TERMINAL", "CC32C");
+        setContext("PHYSICIAL_LOCATION_ID", "001");
+        
+        
+        
+        String functionCall = "begin registration.pkg_s02pro00042.p_new_registration_portal(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);end;";
+        java.sql.Date sqlDate = new java.sql.Date(dob.getTime());
+        CallableStatement stmt = this.getDBTransaction().createCallableStatement(functionCall, 0);
+        try {
+            cnic = cnic.replace("-", "");
+            System.out.println("first name "  + firstName  + " middleName " + middleName  + " Last Name " + lastName +
+                               " Full Name " + fullName + " cnic " + cnic + " sex id " + sexId + " dob " + dob +  " maritalStatus " + maritalStatus + " address " + address + " contact No " + contactNo + " password " + password );
+            stmt.setString(1, "001005");
+            stmt.setString(2, firstName);
+            stmt.setString(3, middleName);
+            stmt.setString(4, lastName);
+            stmt.setString(5, fullName);
+            stmt.setString(6, cnic);
+            stmt.setString(7, sexId);
+            stmt.setDate(8, sqlDate);
+            stmt.setString(9, maritalStatus);
+            stmt.setString(10, fatherName);
+            stmt.setString(11, husbandName);
+            stmt.setString(12, address);
+            stmt.setString(13, contactNo);
+            stmt.setString(14, password);
+            stmt.setString(15, "001");
+            stmt.setString(16, "CC32C");
+            stmt.setString(17, "S91TF00045");
+            stmt.setString(18, "U1");
+            stmt.registerOutParameter(19, Types.VARCHAR);
+            stmt.registerOutParameter(20, Types.CHAR);
+            stmt.registerOutParameter(21, Types.VARCHAR);
+            stmt.execute();
+            String stop = stmt.getString(20);
+            System.out.println("message " + stmt.getString(19) );
+            System.out.println("P alert "  + stmt.getString(21));
+            System.out.println(" pstop " + stop + " error " + stmt.getString(21) + " success message " +
+                               stmt.getString(19));
+            if (stop != null && stop.trim().equalsIgnoreCase("Y")) {
+                success[1] = stmt.getString(21);
+                success[0] = "N";
+            } else {
+                success[1] = stmt.getString(21);
+                success[0] = "Y";
+            }
+            System.out.println("message is " + success[1] + " status " + success[0]);
+        } catch (Exception sqle) {
+            // TODO: Add catch code
+            sqle.printStackTrace();
+            throw new JboException(sqle.getMessage());
+           
+        } finally {
+            try {
+                stmt.close();
+            } catch (SQLException sqle) {
+                // TODO: Add catch code
+                sqle.printStackTrace();
+            }
+        }
+        return success;
+    }
+
+
+Message after successfull registration
+
+
+REGISTRATION COMPLETED SUCCESSFULLY. YOUR MRNO IS 00180004042058. YOUR SIGN IN DETAILS HAS BEEN SENT ON YOUR PROVIDED CONTACT NUMBER.
+
+
