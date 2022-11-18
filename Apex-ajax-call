@@ -1,0 +1,171 @@
+--------------------START DELETE CODE----------------------------------------------------------
+javascript:void(null);
+<span class="t-Icon fa fa-trash delete-note dr" aria-hidden="true" style="color:red"></span>
+data-id="&GROUPID."
+-----------------
+let group_id = $(this.triggeringElement).parent().data('id');
+
+apex.message.confirm('Are you sure, you want to delete this record?', function (isOk) {
+    if (isOk) {
+        apex.server.process(
+            'DeleteDBRole',
+            {
+                x01: $v("P3_GROUPID"),
+                x02: group_id 
+            },
+            {
+                dataType: 'text',
+                success: function(data)  {
+                    var obj = JSON.parse(data);
+                
+                    if(obj.status == "success"){
+                    
+                    apex.message.showPageSuccess(obj.message);
+                     setTimeout(function() {
+                    $('#t_Alert_Success').fadeOut('fast');
+                    }, 2000);
+                    apex.region('db_role').refresh();
+                    }
+                    else
+                    apex.message.alert(obj.message);
+                }
+            }
+        );
+    }
+})
+--------------------PLSQL-----------
+DECLARE
+V_GROUP_ID           VARCHAR2(200)    := APEX_APPLICATION.G_X01;
+V_DB_ROLE_NAME_ID    VARCHAR2(200)    := APEX_APPLICATION.G_X02;
+
+BEGIN
+
+DELETE FROM SECURITY.GROUP_DB_ROLES WHERE GROUP_ID = V_GROUP_ID AND DB_ROLE_NAME = V_DB_ROLE_NAME_ID; 
+
+apex_json.open_object;
+  apex_json.write( p_name => 'status', p_value => 'success');
+  apex_json.write( p_name => 'message', p_value => 'Record Deleted successfully.');
+apex_json.close_object;
+EXCEPTION
+WHEN OTHERS THEN
+ apex_json.open_object;
+  apex_json.write( p_name => 'status', p_value => 'failed');
+  apex_json.write( p_name => 'message', p_value => 'Unable to Delete Record');
+  apex_json.close_object;
+
+END;
+--------------------------------END DELETE CODE-------------------------------------------------------------
+--------------------------------START UPDATE CODE-----------------------------------------------------------
+javascript:void(null);
+<span class="t-Icon fa fa-edit edit-irrow ur" aria-hidden="true"></span>
+onclick="updateRow(this, '&REPORT_TYPE_ID.', '&REPORT_TYPE_DESC.', '&PAGE_HEIGHT.', '&BOTTOM_MARGIN.', '&ORDER_BY.', '&ACTIVE.')"
+-----------------------Page level code
+function updateRow(p_this, p_reportID,p_reportDesc,p_hight, p_bottom, p_order, p_active) {
+
+if(p_orientation == 'Landscape'){
+    p_orientation  = 'L';
+    apex.item( "P18_ORIENTATION_1" ).setValue (p_orientation);
+}
+else{
+   p_orientation  = 'P'; 
+   apex.item( "P18_ORIENTATION_1" ).setValue (p_orientation);
+}
+  apex.item( "P18_REPORT_TYPE_ID_1" ).setValue (p_reportID);
+  apex.item( "P18_REPORT_TYPE_DESC_1" ).setValue (p_reportDesc);
+  apex.item( "P18_PAGE_HEIGHT_1" ).setValue (p_hight);
+  apex.item( "P18_PAGE_WIDTH_1" ).setValue (p_bottom);
+  apex.item( "P18_PAGE_WIDTH_1" ).setValue (p_order);
+  apex.item( "P18_PAGE_WIDTH_1" ).setValue (p_active);
+
+  apex.theme.openRegion('editreport_Dialog');
+}
+---------------------------------------------javascript code ajax FOR SAVE/UPDATE
+    apex.server.process("ReportUpdateProcess", 
+{   
+    x01: $v("P18_REPORT_TYPE_ID_1"),
+    x02: $v("P18_REPORT_TYPE_DESC_1"),
+    x03: $v("P18_PAGE_HEIGHT_1"),
+    x04: $v("P18_PAGE_WIDTH_1"),
+    x05: $v("P18_ORIENTATION_1"),
+    x06: $v("P18_LEFT_MARGIN_1"),
+
+ },
+
+ { 
+   dataType: 'text',
+    success: function(data)  {
+
+          var obj = JSON.parse(data);
+      
+        if(obj.status == "success"){
+        
+        apex.message.showPageSuccess(obj.message);
+         setTimeout(function() {
+         $('#t_Alert_Success').fadeOut('fast');
+         }, 2000);
+         
+        apex.item( "P18_REPORT_TYPE_ID_1" ).setValue ('');
+        apex.item( "P18_REPORT_TYPE_DESC_1" ).setValue ('');
+        apex.item( "P18_PAGE_HEIGHT_1" ).setValue ('');
+        apex.item( "P18_PAGE_WIDTH_1" ).setValue ('');
+        apex.item( "P18_ORIENTATION_1" ).setValue ('');
+        apex.item( "P18_LEFT_MARGIN_1" ).setValue ('');
+       
+        apex.theme.closeRegion("editreport_Dialog");
+        apex.region('report_types').refresh();
+        
+      }
+      else{
+          apex.message.alert(obj.message);
+          }
+    }
+});
+---------------------------------------------PLSQL CODE FOR SAVE/UPDATE
+DECLARE
+  V_REPORT_ID              VARCHAR2(90)                   :=APEX_APPLICATION.g_x01;
+  V_REPORT_DESC            varchar2(200)                  :=APEX_APPLICATION.g_x02;
+  V_HIGHT                  varchar2(200)                  :=APEX_APPLICATION.g_x03;
+  V_WIDTH                  varchar2(200)                  :=APEX_APPLICATION.g_x04;
+  V_ORIENTATION            varchar2(200)                  :=APEX_APPLICATION.g_x05;
+  V_LEFT                   varchar2(200)                  :=APEX_APPLICATION.g_x06;
+  V_TOP                    varchar2(200)                  :=APEX_APPLICATION.g_x07;
+
+BEGIN
+
+        
+     BEGIN
+     IF V_REPORT_DESC IS NOT NULL AND V_HIGHT IS NOT NULL AND V_WIDTH IS NOT NULL AND V_ORDER_BY IS NOT NULL THEN
+
+      UPDATE DEFINITIONS.REPORT_TYPES
+         SET REPORT_TYPE_ID = V_REPORT_ID,
+          REPORT_TYPE_DESC = V_REPORT_DESC, 
+          PAGE_HEIGHT = V_HIGHT, 
+          PAGE_WIDTH = V_WIDTH, 
+          ORIENTATION = V_ORIENTATION, 
+          LEFT_MARGIN = V_LEFT, 
+          TOP_MARGIN = V_TOP, 
+          RIGHT_MARGIN = V_RIGHT, 
+          BOTTOM_MARGIN = V_BOTTOM, 
+          ORDER_BY = V_ORDER_BY, 
+          ACTIVE = V_ACTVIE
+         WHERE REPORT_TYPE_ID = V_REPORT_ID;
+       
+        apex_json.open_object;
+        apex_json.write( p_name => 'status', p_value => 'success');
+        apex_json.write( p_name => 'message', p_value => 'Record Saved Successfully.');
+        apex_json.close_object;
+        ELSE
+        apex_json.open_object;
+        apex_json.write( p_name => 'status', p_value => 'failed');
+        apex_json.write( p_name => 'message', p_value => 'Please Fill the Require Fields.');
+        apex_json.close_object;
+        END IF;
+        END;
+      EXCEPTION
+      WHEN OTHERS THEN
+        apex_json.open_object;
+        apex_json.write( p_name => 'status', p_value => 'failed');
+        apex_json.write( p_name => 'message', p_value => 'Please Try with different Report Desc');
+        apex_json.close_object;
+END;
+---------------------------------------END CODE 
