@@ -1,0 +1,22 @@
+Setp 1: Create Application Item
+USER_IMAGE and Session State Protection = Unrestricted
+
+Setp 2: Create Process LOADIMAGE and Peocess Point = Ajax Callback
+PLSQL Code:
+begin
+    for c1 in (SELECT * FROM pictures.hr_pictures p where p.mrno=:GV_USER_MRNO) loop
+        --
+        sys.htp.init;
+        sys.owa_util.mime_header( 'image/jpeg', FALSE );
+        sys.htp.p('Content-length: ' || sys.dbms_lob.getlength( c1.image));
+        sys.htp.p('Content-Disposition: attachment; filename="' || c1.mrno || '"' );
+        sys.htp.p('Cache-Control: max-age=3600');  -- tell the browser to cache for one hour, adjust as necessary
+        sys.owa_util.http_header_close;
+        sys.wpg_docload.download_file( c1.image );
+     
+        apex_application.stop_apex_engine;
+    end loop;
+end;
+
+Setp 3: Create Navigation Bar list for display image
+<img style="width:25px;height:25px;border-radius:50%;background" src="f?p=&APP_ID.:0:&APP_SESSION.:APPLICATION_PROCESS=LOADIMAGE:::USER_IMAGE:&APP_USER." alt="No Image">
