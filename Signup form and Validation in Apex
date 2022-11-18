@@ -418,4 +418,21 @@ Message after successfull registration
 
 REGISTRATION COMPLETED SUCCESSFULLY. YOUR MRNO IS 00180004042058. YOUR SIGN IN DETAILS HAS BEEN SENT ON YOUR PROVIDED CONTACT NUMBER.
 
+-----------------------------------------------------------------------------------------------------------------------------------------------------
 
+P1_FIRSTNAME (Lose Focus)
+    
+apex.message.clearErrors();
+
+if ($('#P1_FIRSTNAME').val().length == 0 ) {
+    apex.message.showErrors([
+        {
+        type: apex.message.TYPE.ERROR,
+        location: ['inline'],
+        pageItem: 'P1_FIRSTNAME',
+        message: 'First name must be a value',
+        unsafe: false  
+        }
+    ]);
+    
+}
