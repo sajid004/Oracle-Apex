@@ -168,4 +168,211 @@ BEGIN
         apex_json.write( p_name => 'message', p_value => 'Please Try with different Report Desc');
         apex_json.close_object;
 END;
----------------------------------------END CODE 
+---------------------------------------END CODE -----------------------------
+--------------------------Ajax call with Array of more than 20 items-----------------------------------------------
+
+   apex.server.process("UserSaveProcess", 
+{ 
+      pageItems: ["P33_USERID",
+                  "P33_USERNAME",
+                  "P33_FULL_NAME",
+                  "P33_OLD_PASSWORD",
+                  "P33_PASSWORD",
+                  "P33_CONFIRM_PASSWORD",
+                  "P33_USER_TYPE",
+                  "P33_DISPLAY_ASSIGNMENT",
+                  "P33_ALERT_EXPIRY_DAYS",
+                  "P33_MAX_SESSION_LIMIT",
+                  "P33_USER_CODE",
+                  "P33_OBJ_LIST_SOURCE",
+
+                  "P33_MRNO",
+                  "P33_LOGIN_LOGGING_ON",
+                  "P33_NO_OF_WRONG_TRIES",
+                  "P33_MIN_PASSWORD_LENGTH",
+                  "P33_CHECK_ALREADY_LOGIN",
+
+                  "P33_PASSWORD_EXPIRE",
+                  "P33_ACTIVE",
+                  "P33_IS_MAIL",
+                  "P33_TEXT_SPECIALITY",
+                  "P33_APPLICATION_LOGGING_ON",
+                  "P33_GROUP",
+                  "P33_PSWD_EXPIRY_DAYS",
+                  "P33_MAX_PASSWORD_LENGTH",
+                  "P33_COMPLEX_PASSWORD",
+                  "P33_CHECK_PSWRD_HISTORY",
+                  "P33_NEW_PASSWORD_FLAG",
+                  "P33_LIMITED_EMR_ACCESS"
+                 ]
+ },
+
+ { 
+   dataType: 'text',
+    success: function(data)  {
+
+          var obj = JSON.parse(data);
+      
+        if(obj.status == "success"){
+        
+        apex.message.showPageSuccess(obj.message);
+         setTimeout(function() {
+         $('#t_Alert_Success').fadeOut('fast');
+         }, 2000);
+         apex.region('del_group').refresh();
+      }
+      else{
+          apex.message.alert(obj.message);
+          }
+    }
+});
+-----------------PLSQL--------------------
+DECLARE
+V_USERNAME VARCHAR2(100);        
+V_GROUP_ID VARCHAR2(100);        
+V_VALIDPASSWORD VARCHAR2(55); --BOOLEAN;
+V_EXCEPTION                EXCEPTION;
+V_ALERT                    VARCHAR2(1000);
+V_PASSWORD                 VARCHAR2(255);
+V_ALERT_TEXT               VARCHAR2(4000);
+V_STOP                     CHAR(1);
+BEGIN
+    IF :P33_USERID IS NOT NULL AND :P33_USERNAME IS NOT NULL AND :P33_MRNO IS NOT NULL THEN
+
+      IF :P33_CONFIRM_PASSWORD IS NOT NULL THEN
+         BEGIN
+            IF  :P33_PASSWORD = :P33_CONFIRM_PASSWORD
+            THEN
+            NULL;
+            ELSE 
+            V_ALERT := 'Password And confirm password not match!';
+            RAISE V_EXCEPTION;
+            END IF;
+
+            END;
+      END IF;
+
+         IF nvl(:P33_MAX_PASSWORD_LENGTH,0)-nvl(:P33_MIN_PASSWORD_LENGTH,0)<0 THEN
+            V_ALERT := :P33_MIN_PASSWORD_LENGTH||'Minumum password length must be less than maximum password length.'||:P33_MAX_PASSWORD_LENGTH;
+            RAISE V_EXCEPTION;
+        END IF;
+        -- IF :P33_MIN_PASSWORD_LENGTH >= :P33_MAX_PASSWORD_LENGTH THEN
+        --     V_ALERT := 'Maximum password length must be greator than minimum password length.';
+        --     RAISE V_EXCEPTION;
+        -- END IF;
+
+         IF :P33_PSWD_EXPIRY_DAYS > 0 AND :P33_ALERT_EXPIRY_DAYS = 0 THEN
+            V_ALERT := 'Minimum one alert expiry day should be enter.';
+            RAISE V_EXCEPTION;
+        END IF;
+            /***********************************************************************/
+                IF NVL(:P33_ALERT_EXPIRY_DAYS, 0) < 0 THEN
+                V_ALERT := 'Kindly enter valid alert expiry days.';
+                RAISE V_EXCEPTION;
+            END IF;
+            
+            IF NVL(:P33_PSWD_EXPIRY_DAYS, 0) < 0 THEN
+                V_ALERT := 'Kindly enter valid expire password days.';
+                RAISE V_EXCEPTION;
+            END IF;
+            
+            IF NVL(:P33_ALERT_EXPIRY_DAYS, 0) > 0 AND
+                NVL(:P33_PSWD_EXPIRY_DAYS, 0) = 0 THEN
+                V_ALERT := 'Kindly enter valid expire password days.';
+                RAISE V_EXCEPTION;
+            END IF;
+            IF NVL(:P33_ALERT_EXPIRY_DAYS, 0) = 0 AND  NVL(:P33_PSWD_EXPIRY_DAYS, 0) > 0 THEN
+                V_ALERT := 'Alert expiry days must be greater than 0.';
+                RAISE V_EXCEPTION;
+            END IF;
+            IF NVL(:P33_ALERT_EXPIRY_DAYS, 0) > NVL(:P33_PSWD_EXPIRY_DAYS, 0) THEN
+                V_ALERT := 'Expire password days must be greater than alert expiry days.';
+                RAISE V_EXCEPTION;
+            END IF;
+            IF NVL(:P33_NO_OF_WRONG_TRIES,0) < 0 THEN
+                V_ALERT := 'Kindly enter valid no. of wrong tries.';
+            RAISE V_EXCEPTION;
+            END IF;
+            /***********************************************************************/
+
+             BEGIN
+          -- CALL THE PROCEDURE
+             SECURITY.PKG_ISMS.P_CHK_PASSWORD(P_USER_MRNO     => :P33_MRNO,
+                                     P_USER_PASSWORD => :P33_PASSWORD,
+                                     P_ALERT_TEXT    => V_ALERT_TEXT,
+                                     P_STOP          => V_STOP);
+                                    END;
+                                    IF NVL(V_STOP, 'N') = 'Y' THEN
+                                        V_ALERT := V_ALERT_TEXT;
+                                        RAISE V_EXCEPTION;
+                                    END IF;
+  /************************************************************************/
+
+           
+                -- his.message_entry_category(:P15_USERID || :P15_MRNO, 'tsajid');
+                    UPDATE SECURITY.USERS
+                    SET USERID = :P33_USERID,
+                    MRNO = :P33_MRNO,
+                    USERNAME = :P33_USERNAME,
+                    FULL_NAME = :P33_FULL_NAME,
+                    PASSWORD = :P33_PASSWORD,
+                    USER_TYPE = :P33_USER_TYPE,
+                    DISPLAY_ASSIGNMENT = :P33_DISPLAY_ASSIGNMENT,
+                    LOGIN_LOGGING_ON = :P33_LOGIN_LOGGING_ON,
+                    ALERT_EXPIRY_DAYS = :P33_ALERT_EXPIRY_DAYS,
+                    NO_OF_WRONG_TRIES = :P33_NO_OF_WRONG_TRIES,
+                    MAX_SESSION_LIMIT = :P33_MAX_SESSION_LIMIT,
+                    MIN_PASSWORD_LENGTH = :P33_MIN_PASSWORD_LENGTH,
+                    CHECK_ALREADY_LOGIN = :P33_CHECK_ALREADY_LOGIN,
+                    USER_CODE = :P33_USER_CODE,
+                    OBJ_LIST_SOURCE = :P33_OBJ_LIST_SOURCE,
+                    
+                    PASSWORD_EXPIRE = :P33_PASSWORD_EXPIRE,
+                    ACTIVE = :P33_ACTIVE,
+                    IS_MAIL = :P33_IS_MAIL,
+                    TEXT_SPECIALITY = :P33_TEXT_SPECIALITY,
+                    APPLICATION_LOGGING_ON = :P33_APPLICATION_LOGGING_ON,
+                    PSWD_EXPIRY_DAYS = :P33_PSWD_EXPIRY_DAYS,
+                    MAX_PASSWORD_LENGTH = :P33_MAX_PASSWORD_LENGTH,
+                    COMPLEX_PASSWORD = :P33_COMPLEX_PASSWORD,
+                    CHECK_PSWRD_HISTORY = :P33_CHECK_PSWRD_HISTORY,
+                    NEW_PASSWORD_FLAG = :P33_NEW_PASSWORD_FLAG,
+                    LIMITED_EMR_ACCESS = :P33_LIMITED_EMR_ACCESS
+                    WHERE USERID = :P33_PARAM_ID;
+                    
+                     
+                     IF :P33_USERID IS NOT NULL THEN
+                     IF :P33_GROUP IS NULL THEN
+                      V_ALERT := 'Kindly Select Group.';
+                      RAISE V_EXCEPTION;
+                     END IF;
+                      SELECT count(*) 
+                        INTO V_GROUP_ID
+                        FROM SECURITY.MEMBER 
+                        WHERE UPPER(GROUPID) = LTRIM(RTRIM(UPPER(:P33_GROUP))) AND UPPER(USERID) = LTRIM(RTRIM(UPPER(:P33_USERID)));
+                       IF V_GROUP_ID > 0 THEN 
+                       NULL;
+                       ELSE
+                        INSERT INTO SECURITY.MEMBER (USERID, GROUPID)
+                        VALUES(:P33_USERID, :P33_GROUP);
+                        END IF;
+                     END IF;
+                    apex_json.open_object;
+                    apex_json.write( p_name => 'status', p_value => 'success');
+                    apex_json.write( p_name => 'message', p_value => 'Record Saved Successfully.');
+                    apex_json.close_object;
+
+                    ELSE
+                        apex_json.open_object;
+                        apex_json.write( p_name => 'status', p_value => 'failed');
+                        apex_json.write( p_name => 'message', p_value => 'Please Fill the Required Fields.');
+                        apex_json.close_object;
+                    END IF;
+                --     END;
+                EXCEPTION
+                WHEN OTHERS THEN
+                    apex_json.open_object;
+                    apex_json.write( p_name => 'status', p_value => 'failed');
+                    apex_json.write( p_name => 'message', p_value => V_ALERT ||' '||SQLERRM);
+                    apex_json.close_object;
+            END;
