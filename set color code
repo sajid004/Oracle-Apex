@@ -1,0 +1,16 @@
+//query for get all color from DB
+select '' LINK,
+       SC.SERIAL_NO,
+       SC.SLOT_TYPE_ID,
+       SC.DESCRIPTION,
+       --SC.BG_COLOR AS TXT_BCOLOR,
+       REPLACE(REPLACE(REPLACE(BG_COLOR,'r',''),'g',','),'b',',') AS TXT_BCOLOR,
+       SC.BG_COLOR,
+       SC.ACTION,
+       DECODE(SC.ACTION,'W','Warning','S','Stop','') AS DISP_ACTION,
+       SC.DISPLAY_MESSAGE,
+       SC.ACTIVE,
+       DECODE(SC.ACTIVE,'Y','Yes','N','No','No') AS DISP_ACTIVE,
+       SC.DEPARTMENT_ID
+  from RADIOLOGY.SLOT_COLOR SC
+  where SC.DEPARTMENT_ID = DECODE(:P50_LBX_DEPARTMENT,'000', SC.DEPARTMENT_ID, :P50_LBX_DEPARTMENT)
