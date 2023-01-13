@@ -1,0 +1,44 @@
+//use following query
+select CATEGORY_ID,
+       GROUP_ID,
+       GROUP_DESC,
+       GROUP_CODE,
+       ORDER_BY,
+       ACTIVE,
+       CASE 
+       WHEN GROUP_ID = '00001' THEN
+       'BOLD'
+       ELSE
+       'NORMAL'
+       END AS BOLD
+  from DIAGNOSTIC.PATIENT_GROUPS
+  
+  //paste following code in column attribut in javascript initilization code
+  function(options) {
+    options.defaultGridColumnOptions = {
+        cellCssClassesColumn: "BOLD"
+    }
+    return options;
+}
+//set static id of column
+st_GROUP_DESC
+//set get focus DA following code
+ alert($v('document.getElementById("st_GROUP_DESC")'));
+    document.getElementById("st_GROUP_DESC").focus();
+    
+//set on load page DA following code
+apex.region("New").call("getActions").set("edit",true);
+
+//paste following code in page level inline css
+.BOLD{
+background-color: #ff0000;
+color: #fff;
+font-weight: 900;
+}
+
+/* #st_New .a-GV-table{
+    width: 750px;
+} */
+#PopupLov_64_P64_NEW_dlg .a-GV-table{
+    width: 750px;
+}
