@@ -1,4 +1,4 @@
-/////////default message close
+/////////default message close, paste this code in page level in page load section
 apex.jQuery(function() {
 
   apex.theme42.util.configAPEXMsgs({
