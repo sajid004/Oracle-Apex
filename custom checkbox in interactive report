@@ -1,0 +1,19 @@
+// custom checkbox in ionteractive report
+//use following query for checkbox
+     SELECT FT.FUND_ID, FT.DESCRIPTION, FT.SHORT_DESC, FT.ACTIVE,
+      DECODE(NVL(FT.ACTIVE, 'N'), 'Y', 'fa fa-check-circle', 'fa fa-times-circle') ACTIVE_icon,
+           DECODE(NVL(FT.ACTIVE, 'N'), 'Y', 'green', 'red') ACTIVE_icon_color
+     FROM   ASSESSMENT.FUND_TYPE FT
+     
+//set column plan text and write foloowing code in html expression
+    <span class="#ACTIVE_ICON#" style="color: #ACTIVE_ICON_COLOR#"></span>
+    
+//following code pase in inline css on page level
+    .syn-check-J:before,.syn-check-Y:before {
+      content: "\f00c";
+      color: green;
+    }
+    .syn-check-N:before {
+      content: "\f00d";
+      color: #ff3a30; /* color: red; */
+    }
