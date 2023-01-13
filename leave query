@@ -1,0 +1,28 @@
+//create card and pase query
+SELECT Q.APPLICANT_MRNO,
+       Q.EMP_LEAVE_SERIAL_NO,
+       HIS.PKG_PATIENT.GET_PATIENT_NAME(NVL(Q.FORWARD_TO, Q.ACTING_FOR)) IN_QUEUE,
+       HIS.PKG_PATIENT.GET_PATIENT_NAME(Q.APPLICANT_MRNO) APPLICANT_NAME,
+       REGEXP_REPLACE(INITCAP(HRD.F_GET_DESIGNATION_DESC(Q.APPLICANT_MRNO)),
+                      '[^A-Z]') DESIGNATION,
+       HRD.F_GET_DEPARTMENT_NAME(Q.APPLICANT_MRNO) DEPARTMENT,
+       LT.DESCRIPTION LEAVE_TYPE,
+       TO_CHAR(S.FROM_DATE, 'DD-MON-RRRR') || ' TO ' ||
+       TO_CHAR(S.TO_DATE, 'DD-MON-RRRR') ||'  '||
+       DECODE(S.SHORT_LEAVE,
+              'Y',
+              DECODE(S.SHORT_LEAVE_HALF,
+                     'F',
+                     'First Half',
+                     'S',
+                     'Second Half',
+                     ' '),
+              ' ')LEAVE_DATE ,
+       S.REMARKS
+  FROM HRD.LEAVE_APPLICATION_QUEUE Q,
+       HRD.EMPLOYEE_LEAVES         S,
+       HRD.LEAVE_TYPE              LT
+ WHERE Q.EMP_LEAVE_SERIAL_NO = S.SERIAL_NO
+   AND Q.APPLICANT_MRNO = S.MRNO
+   AND S.LEAVE_TYPE_ID = LT.LEAVE_TYPE_ID
+   AND Q.FORWARD_TO = '00160000010664';
