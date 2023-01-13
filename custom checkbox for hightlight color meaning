@@ -1,0 +1,44 @@
+//create a region and paste following code
+
+<html>
+    <head>
+    <style>
+    .farp {
+        color: #FDEBD0;
+        background-color: #FDEBD0;
+    }
+    .fapr {
+        color: #C9DFFA;
+        background-color: #C9DFFA;
+    }
+    /* .fats {
+        color: #F9E79F;
+        background-color: #F9E79F;
+    } */
+    </style>
+    </head>
+<body>
+<span class="farp fa fa-layout-blank" aria-hidden="true"></span>
+<span>Ready For Print </span>
+<span class="fapr fa fa-layout-blank" aria-hidden="true"></span>
+<span>Printed Report </span>
+<!-- <span class="fats fa fa-layout-blank" aria-hidden="true"></span> -->
+<!-- <span>Transcribed </span> -->
+<br>
+</body>
+</html>
+
+
+<!-- <html>
+<head>
+</head>
+<body>
+<span class="fa fa-layout-blank u-color-24 u-color-24-text u-color-24-border" aria-hidden="true"></span>
+<span>Not Transcribed </span>
+<span class="fa fa-layout-blank u-color-2 u-color-2-text u-color-2-border" aria-hidden="true"></span>
+<span>Not Forwarded </span>
+<span class="fa fa-layout-blank u-color-7 u-color-7-text u-color-7-border" aria-hidden="true"></span>
+<span>Transcriptionst Signed </span>
+<br>
+</body>
+</html> -->
