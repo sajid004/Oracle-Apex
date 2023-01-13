@@ -1,4 +1,5 @@
 // custom checkbox in ionteractive report
+create two other column: ACTIVE_ICON, ACTIVE_ICON_COLOR
 //use following query for checkbox
      SELECT FT.FUND_ID, FT.DESCRIPTION, FT.SHORT_DESC, FT.ACTIVE,
       DECODE(NVL(FT.ACTIVE, 'N'), 'Y', 'fa fa-check-circle', 'fa fa-times-circle') ACTIVE_icon,
