@@ -1,0 +1,3 @@
+//create DA with SetValue, give item/column in effected element
+select to_CHAR(SYSDATE,'DD-MON-YYYY HH24:MI:SS') from dual
+
