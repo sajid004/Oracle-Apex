@@ -1,2 +1,8 @@
 // following class add in cssClassess
 js-dialog-size1250x700
+
+//open custom width dialogbox , on button click paste the code with static id(cr-frm-1)
+$("#cr-frm-1").dialog("open");
+let crform1 = document.querySelector("#cr-frm-1").parentNode;
+crform1.style.width= "100%";
+crform1.style.marginLeft= "0";
