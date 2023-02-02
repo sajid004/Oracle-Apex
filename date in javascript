@@ -1,0 +1,7 @@
+I found a simple method to get sysdate in JavaScript so I share it to all of you. 
+If any one using this method"
+var today = new Date(inone);
+var dd = String(today.getDate()).padStart(2, '0');
+var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+var yyyy = today.getFullYear();" to get sysdate in JavaScript then he can use below instead of above code "let  today = new Date();
+$s('YOUR_PAGE_ITEM',apex.date.format(today,'DD-MM-RRRR'));"
