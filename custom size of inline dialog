@@ -1,0 +1,4 @@
+//add appearence -> css class
+js-dialog-size1400x600
+///create DA -> add javascript 
+$("#interaction").parent().css({"width": "96vw","left": "2%","transform": "translate(-50%, 0)"});
