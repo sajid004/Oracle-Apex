@@ -1,0 +1,4 @@
+//clicked button using javascript and give button id (refershAdmissionid)
+ window.parent.document.getElementById('refershAdmissionid').click();
+//on button click and give region id like (VITALHISTORY)
+$("#VITALHISTORY").load(" #VITALHISTORY");
