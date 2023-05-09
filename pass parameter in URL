@@ -1,0 +1,3 @@
+//add in javascript
+
+apex.navigation.redirect("f?p=&APP_ID.:12:&APP_SESSION.::P_ACTUAL_MRNO:&P8_P_ACTUAL_MRNO.:P12_AMOUNT:5555");
