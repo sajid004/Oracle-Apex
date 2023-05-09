@@ -1,0 +1,3 @@
+//apply code
+
+select owa_util.get_cgi_env('REMOTE_ADDR') into v_host_ip from dual;
