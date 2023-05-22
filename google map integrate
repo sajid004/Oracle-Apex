@@ -1,0 +1,425 @@
+//add in filr url
+https://maps.googleapis.com/maps/api/js?key=AIzaSyDEacAicZhhkOi00V2hlp34pzF1Nn4R0LM&callback=initialize (ofcie)
+//AIzaSyCdFTaBDiX1RfBF8QlOXtVx_D6n26k01oM (my api)
+//add code page lavel
+var r1;
+var r2;
+var lat;
+var long;
+var map;
+var  mapObjectLoaded = false;
+var t1 = '&P44_LATITDUE.';
+var t2 = '&P44_LONGITIDUE.';
+var marker1 = new google.maps.Marker();
+var marker2 = new google.maps.Marker();
+var directionsService = new google.maps.DirectionsService();
+var directionsRenderer = new google.maps.DirectionsRenderer({suppressMarkers: true});
+
+// Start/Finish icons
+ var icons = {
+  start: new google.maps.MarkerImage(
+   '#APP_FILES#rider-motorcycle.png',
+  ),
+  end: new google.maps.MarkerImage(
+   '#APP_FILES#locationpatient.png',
+  )
+ };
+
+    function getLocation(){
+    // console.log('am in gety location')
+    // console.log('true' + r1 + '--'+r2)
+    lati  = r1;
+    long  = r2;
+
+    initialize(lati,long);
+}
+//////
+function initialize(lt,lg) {
+                  if(mapObjectLoaded == false){
+                var center = new google.maps.LatLng(lt, lg);
+                // Declare your map options
+                var mapOptions = {
+                    zoom: 15,
+                    center: center,
+                    mapTypeId: google.maps.MapTypeId.ROADMAP
+                };
+                  
+                // Create a map in the #map HTML element, using the declared options
+                 map = new google.maps.Map(document.getElementById("MapRegion"), mapOptions);
+                  }
+                const rider = {lat:parseFloat(r1) ,lng: parseFloat(r2)};
+                const patient = {lat:  parseFloat(t1), lng: parseFloat(t2)};
+
+   if (directionsRenderer) {
+        directionsRenderer.setMap(null); 
+        // console.log(directionsRenderer+'sajid')
+       }
+
+  directionsRenderer.setMap(map); // Existing map object displays directions
+
+  const route = {
+      origin: rider,
+      destination: patient,
+      travelMode: 'DRIVING'
+  }
+
+  directionsService.route(route,
+    function(response, status) { // anonymous function to capture directions
+      if (status !== 'OK') {
+        window.alert('Directions request failed due to ' + status);
+        return;
+      } else {
+        directionsRenderer.setDirections(response); // Add route to the map
+        var directionsData = response.routes[0].legs[0]; // Get data about the mapped route
+          makeMarker( directionsData.start_location, icons.start, "Patient" );
+          makeMarker2( directionsData.end_location, icons.end, 'Rider' );
+        if (!directionsData) {
+          window.alert('Directions request failed');
+          return;
+        }
+        else {
+           mapObjectLoaded = true;  //map loading first time
+        }
+      }
+      
+    });
+
+}
+function makeMarker( position, icon, title ) {
+  marker1.setPosition(position),
+  marker1.setMap(map),
+  marker1.setIcon(icon),
+  marker1.setTitle(title)
+}
+function makeMarker2( position, icon, title ) {
+  marker2.setPosition(position),
+  marker2.setMap(map),
+  marker2.setIcon(icon),
+  marker2.setTitle(title)
+}
+
+//////////////////////////////ajax call////////////////////////
+function updatelatiLongiStatus() {
+
+                        apex.server.process(
+                                'Get_latitueLongitiude',
+                                {
+                                 x01: $v('P44_ORDER_NO')
+
+                                }, {
+                                success: function (response) {
+                                                if (response.alert_text == 0) {
+                                                    r1= response.rider_lati;
+                                                    r2= response.rider_longi;
+                                                    //console.log('true' + response.rider_lati + '--'+response.rider_longi)
+                                                  getLocation();
+                                                }
+                                                 else {
+                                                 console.log('false')
+                                                  }
+                                }
+                        });
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//add this code in region for calculate address
+<!DOCTYPE html>
+<html>
+<head>
+    <!--skmapi AIzaSyDEacAicZhhkOi00V2hlp34pzF1Nn4R0LM -->
+    <!--my AIzaSyCdFTaBDiX1RfBF8QlOXtVx_D6n26k01oM -->
+  <!-- <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&libraries=places"></script> -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDEacAicZhhkOi00V2hlp34pzF1Nn4R0LM&libraries=places&callback=initialize" async defer></script>
+</head>
+<body> 
+<!-- <input id="searchTextField" type="text" size="50" placeholder="Enter a location" autocomplete="on" runat="server" />   -->
+</body>
+<script type="text/javascript">
+    function initialize() {
+        var input = document.getElementById('P37_SEARCH_LOCATION');
+        var autocomplete = new google.maps.places.Autocomplete(input);
+        google.maps.event.addListener(autocomplete, 'place_changed', function () {
+            var place = autocomplete.getPlace();
+            document.getElementById('P37_LATITUDE').value = place.geometry.location.lat();
+            document.getElementById('P37_LONGITUDE').value = place.geometry.location.lng();
+            
+            initializeMap(place.geometry.location.lat(), place.geometry.location.lng());
+            
+        });
+    }
+    google.maps.event.addDomListener(window, 'load', initialize); 
+    function initializeMap(lt,lg) {
+                var myLatlng = new google.maps.LatLng(lt, lg);
+                var center = new google.maps.LatLng(lt, lg);
+                var mapOptions = {
+                    zoom: 15,
+                    center: center,
+                    mapTypeId: google.maps.MapTypeId.ROADMAP
+                };
+                var map = new google.maps.Map(document.getElementById("map"), mapOptions);
+
+//    const dakota = {lat: lt, lng: lg};
+//    var mk1 = new google.maps.Marker({position: dakota, map: map});
+
+///START CLICK FUNCTION
+ google.maps.event.addListener(map, 'click', function(event) {
+                    document.getElementById('P37_LATITUDE').value = event.latLng.lat();
+                    document.getElementById('P37_LONGITUDE').value = event.latLng.lng();
+                    getReverseGeocodingData(event.latLng.lat(), event.latLng.lng());
+
+    var geocoder;
+    geocoder = new google.maps.Geocoder();
+    var latlng = new google.maps.LatLng(event.latLng.lat(), event.latLng.lng());
+    geocoder.geocode(
+    {'latLng': latlng}, 
+    function(results, status) {
+        if (status == google.maps.GeocoderStatus.OK) {
+                if (results[0]) {
+                    var add= results[0].formatted_address ;
+                    var  value=add.split(",");
+                    count=value.length;
+                    country=value[count-1];
+                    state=value[count-2];
+                    city=value[count-3];
+                    apex.item('P37_CURRENT_CITY').setValue(city);
+                }
+                else  {
+                    alert("address not found");
+                }
+        }
+         else {
+            alert("Geocoder failed due to: " + status);
+        }
+    }
+    );
+                  
+ });
+///END CLICK FUNCTION
+// START DRAGEABLE CODE
+
+  var marker = new google.maps.Marker({
+            draggable: true,
+            position: myLatlng,
+            map: map,
+            title: "Your location"
+        });
+    google.maps.event.addListener(marker, 'dragend', function (event) {
+
+            document.getElementById("P37_LATITUDE").value = event.latLng.lat();
+            document.getElementById("P37_LONGITUDE").value = event.latLng.lng();
+            getReverseGeocodingData(event.latLng.lat(), event.latLng.lng());
+
+    var geocoder;
+    geocoder = new google.maps.Geocoder();
+    var latlng = new google.maps.LatLng(event.latLng.lat(), event.latLng.lng());
+
+    geocoder.geocode(
+    {'latLng': latlng}, 
+    function(results, status) {
+        if (status == google.maps.GeocoderStatus.OK) {
+                if (results[0]) {
+                    var add= results[0].formatted_address ;
+                    var  value=add.split(",");
+                    count=value.length;
+                    country=value[count-1];
+                    state=value[count-2];
+                    city=value[count-3];
+                    apex.item('P37_CURRENT_CITY').setValue(city);;
+                }
+                else  {
+                    alert("address not found");
+                }
+        }
+         else {
+            alert("Geocoder failed due to: " + status);
+        }
+    }
+    );
+
+ });
+//END DRAGEABLE CODE
+
+} //END INITILIZE FUN
+// GET ADDRESS FUNCTION
+function getReverseGeocodingData(lat, lng) {
+    var latlng = new google.maps.LatLng(lat, lng);
+    var geocoder = new google.maps.Geocoder();
+    geocoder.geocode({ 'latLng': latlng }, function (results, status) {
+        if (status !== google.maps.GeocoderStatus.OK) {
+            alert(status);
+        }
+        if (status == google.maps.GeocoderStatus.OK) {
+            var address = (results[0].formatted_address);
+            console.log("This is custom address " +address)
+            apex.item( "P37_SEARCH_LOCATION" ).setValue (address);
+        }
+    });
+}
+</script>
+</html> 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//add code page level for calculate address
+var long;
+var lati;
+var map;
+var infowindow;
+
+function getLocation() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(showPosition);
+  } else { 
+    x.innerHTML = "Geolocation is not supported by this browser.";
+  }
+}
+
+function showPosition(position) {
+  lati  = position.coords.latitude; 
+  long  = position.coords.longitude;
+  apex.item( "P37_LATITUDE" ).setValue (lati);
+  apex.item( "P37_LONGITUDE" ).setValue (long);
+
+   getReverseGeocodingData(lati, long);
+    initialize(lati,long);
+
+//START GET CITY NAME CODE/////
+    var geocoder;
+    geocoder = new google.maps.Geocoder();
+    var latlng = new google.maps.LatLng(lati, long);
+
+    geocoder.geocode(
+    {'latLng': latlng}, 
+    function(results, status) {
+        if (status == google.maps.GeocoderStatus.OK) {
+                if (results[0]) {
+                    var add= results[0].formatted_address ;
+                    var  value=add.split(",");
+
+                    count=value.length;
+                    country=value[count-1];
+                    state=value[count-2];
+                    city=value[count-3];
+                    apex.item('P37_CURRENT_CITY').setValue(city);
+                }
+                else  {
+                    alert("address not found");
+                }
+        }
+         else {
+            alert("Geocoder failed due to: " + status);
+        }
+    }
+);
+    //END GET CITY NAME CODE/////
+
+}
+////// initialize function//////////
+function initialize(lt,lg) {
+
+                var center = new google.maps.LatLng(lt, lg);
+                var myLatlng = new google.maps.LatLng(lt, lg);
+                var mapOptions = {
+                    zoom: 15,
+                    center: center,
+                    mapTypeId: google.maps.MapTypeId.ROADMAP
+                };
+
+                var map = new google.maps.Map(document.getElementById("map"), mapOptions);
+//   const dakota = {lat: lt, lng: lg};
+//    var mk1 = new google.maps.Marker({position: dakota, map: map});
+
+///START CLICK FUNCTION
+ google.maps.event.addListener(map, 'click', function(event) {
+                    document.getElementById('P37_LATITUDE').value = event.latLng.lat();
+                    document.getElementById('P37_LONGITUDE').value = event.latLng.lng();
+                    getReverseGeocodingData(event.latLng.lat(), event.latLng.lng());
+
+    var geocoder;
+    geocoder = new google.maps.Geocoder();
+    var latlng = new google.maps.LatLng(event.latLng.lat(), event.latLng.lng());
+    geocoder.geocode(
+    {'latLng': latlng}, 
+    function(results, status) {
+        if (status == google.maps.GeocoderStatus.OK) {
+                if (results[0]) {
+                    var add= results[0].formatted_address ;
+                    var  value=add.split(",");
+                    count=value.length;
+                    country=value[count-1];
+                    state=value[count-2];
+                    city=value[count-3];
+                    apex.item('P37_CURRENT_CITY').setValue(city);
+                }
+                else  {
+                    alert("address not found");
+                }
+        }
+         else {
+            alert("Geocoder failed due to: " + status);
+        }
+    }
+    );
+                  
+ });
+///END CLICK FUNCTION
+// START DRAGEABLE CODE
+
+  var marker = new google.maps.Marker({
+            draggable: true,
+            position: myLatlng,
+            map: map,
+            title: "Your location"
+        });
+    google.maps.event.addListener(marker, 'dragend', function (event) {
+
+            document.getElementById("P37_LATITUDE").value = event.latLng.lat();
+            document.getElementById("P37_LONGITUDE").value = event.latLng.lng();
+            getReverseGeocodingData(event.latLng.lat(), event.latLng.lng());
+
+    var geocoder;
+    geocoder = new google.maps.Geocoder();
+    var latlng = new google.maps.LatLng(event.latLng.lat(), event.latLng.lng());
+
+    geocoder.geocode(
+    {'latLng': latlng}, 
+    function(results, status) {
+        if (status == google.maps.GeocoderStatus.OK) {
+                if (results[0]) {
+                    var add= results[0].formatted_address ;
+                    var  value=add.split(",");
+                    count=value.length;
+                    country=value[count-1];
+                    state=value[count-2];
+                    city=value[count-3];
+                    apex.item('P37_CURRENT_CITY').setValue(city);;
+                }
+                else  {
+                    alert("address not found");
+                }
+        }
+         else {
+            alert("Geocoder failed due to: " + status);
+        }
+    }
+    );
+
+ });
+//END DRAGEABLE CODE
+
+  
+} // END ININTILIZE FUNCTION
+
+// GET ADDRESS FUNCTION
+function getReverseGeocodingData(lat, lng) {
+    var latlng = new google.maps.LatLng(lat, lng);
+    var geocoder = new google.maps.Geocoder();
+    geocoder.geocode({ 'latLng': latlng }, function (results, status) {
+        if (status !== google.maps.GeocoderStatus.OK) {
+            alert(status);
+        }
+        if (status == google.maps.GeocoderStatus.OK) {
+            var address = (results[0].formatted_address);
+            console.log("This is custom address " +address)
+            apex.item( "P37_SEARCH_LOCATION" ).setValue (address);
+        }
+    });
+}
