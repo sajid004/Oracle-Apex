@@ -1,6 +1,5 @@
 //add in filr url
-https://maps.googleapis.com/maps/api/js?key=AIzaSyDEacAicZhhkOi00V2hlp34pzF1Nn4R0LM&callback=initialize (ofcie)
-//AIzaSyCdFTaBDiX1RfBF8QlOXtVx_D6n26k01oM (my api)
+
 //add code page lavel
 var r1;
 var r2;
@@ -126,10 +125,9 @@ function updatelatiLongiStatus() {
 <!DOCTYPE html>
 <html>
 <head>
-    <!--skmapi AIzaSyDEacAicZhhkOi00V2hlp34pzF1Nn4R0LM -->
-    <!--my AIzaSyCdFTaBDiX1RfBF8QlOXtVx_D6n26k01oM -->
-  <!-- <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&libraries=places"></script> -->
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDEacAicZhhkOi00V2hlp34pzF1Nn4R0LM&libraries=places&callback=initialize" async defer></script>
+  
+  <!-- <script src="https://maps.googleapis.com/maps/api/js"></script> -->
+ 
 </head>
 <body> 
 <!-- <input id="searchTextField" type="text" size="50" placeholder="Enter a location" autocomplete="on" runat="server" />   -->
