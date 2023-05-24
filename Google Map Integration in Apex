@@ -1,4 +1,4 @@
-https://maps.googleapis.com/maps/api/js?key=AIzaSyCdFTaBDiX1RfBF8QlOXtVx_D6n26k01oM111&libraries=places&callback=initialize
+
 // add on file url
 
 var long='';
@@ -153,8 +153,8 @@ function degreesToRadians(degrees) {
 <!DOCTYPE html>
 <html>
 <head>
-  <!-- <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false&libraries=places"></script> -->
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCdFTaBDiX1RfBF8QlOXtVx_D6n26k01oM111&libraries=places&callback=initialize" async defer></script>
+  <!-- <script src="https://maps.googleapis.com/maps/api/js?v=3."></script> -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=" async defer></script>
 </head>
 <body> 
 <!-- <input id="searchTextField" type="text" size="50" placeholder="Enter a location" autocomplete="on" runat="server" />   -->
