@@ -1,1 +1,10 @@
+//create link on column in IR
 javascript:$s("P31_OPTION_ID","#OPTION_ID#");javascript:$s("P31_ACTIVE_1","#ACTIVES#");javascript:$s("P31_ORDER_BY_1","#ORDER_BY#");javascript:$s("P31_IS_ANSWER_CORRECT","#ANS#");javascript:$s("P31_DESCRIPTION","#DESCRIPTION#");javascript:$s("P31_DESCRIPTION_URDU","#DESCRIPTION_URDU#");javascript:$s("P31_OPT_ID","#OPTION_ID#");javascript:openModal("upt_option");
+
+//////get column value of IR using following
+Target: javascript:void(null);
+Link Text: <span id="delrecord" class="t-Icon fa fa-trash" aria-hidden="true" style="color:red"></span>
+Link Attributes: data-orno=#ORDER_NO# data-oloc=#ORDER_LOCATION_ID# data-otype=#ORDER_TYPE_ID# data-olocid=#LOCATION_ID# data-trns=#TRANSACTION_NO#
+//////create DA with jquery-select(#delrecord) and set value
+$(this.triggeringElement).parent().data('orno');
+and set in effected items for set value
