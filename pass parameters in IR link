@@ -1,1 +1,1 @@
-
+javascript:$s("P31_OPTION_ID","#OPTION_ID#");javascript:$s("P31_ACTIVE_1","#ACTIVES#");javascript:$s("P31_ORDER_BY_1","#ORDER_BY#");javascript:$s("P31_IS_ANSWER_CORRECT","#ANS#");javascript:$s("P31_DESCRIPTION","#DESCRIPTION#");javascript:$s("P31_DESCRIPTION_URDU","#DESCRIPTION_URDU#");javascript:$s("P31_OPT_ID","#OPTION_ID#");javascript:openModal("upt_option");
