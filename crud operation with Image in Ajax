@@ -1,1 +1,194 @@
+//create image item and set Display As = Inline File Browse and Storage Type = BLOB column specified
+//and create DA on image item for following
+try {
+        var canvas = $x('image-preview');
+        var ctx = canvas.getContext('2d');
+        var img = new Image;
+        img.src = window.URL.createObjectURL(this.triggeringElement.files[0]);
+        img.onload = function () {
+                if (img.width > 200) {
+                        canvas.style.width = '150px';
+                } else {
+                        canvas.style.width = img.width + 'px';
+                }
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0);
+                $("#container-img-preview,#image-preview").show();
+        }
+} catch (e) {
+        console.log(e);
+}
+//////////////////////////////////////////create static content region with following 
+<canvas id="image-preview" style="text-align: center;"></canvas>
+
+////////////////////////create utton for save and call ajax as following
+
+var canvas = document.getElementById('image-preview');     
+var context = canvas.getContext('2d');
+
+   apex.server.process("AddQuestionProcess", 
+{ 
+      pageItems: ["P31_QUESTION_ID",
+                  "P31_TRAINING_TOPIC_ID",
+                  "P31_QUESTION_TYPE",
+                  "P31_OPTION_TYPE",
+                  "P31_MARKING_CRITERIA",
+                  "P31_VISUAL_QUESTION",
+                  "P31_VISUAL_OPTION",
+                  "P31_QUESTION_DESCRIPTION",
+                  "P31_QUESTION_DESCRIPTION_URDU",
+                  "P31_ORDER_BY",
+                  "P31_ACTIVE"
+                 ],
+     p_clob_01: canvas.toDataURL().match(/,(.*)$/)[1],
+ },
+
+ { 
+   dataType: 'text',
+    success: function(data)  {
+       
+          var obj = JSON.parse(data);
+      
+        if(obj.status == "success"){
+        
+        apex.message.showPageSuccess(obj.message);
+        
+          $("#opt_btn").removeClass("apex_disabled");
+          $x_Hide('save_btn');
+          $x_Show('Update_btn');
+
+          //apex.item("P31_SHOW_UPDATE_BTN").setValue ('1');
+
+         setTimeout(function() {
+         $('#t_Alert_Success').fadeOut('fast');
+         }, 2000);
+         //apex.item("P23_LOACTIONS").setValue ('');
+      }
+      else{
+          apex.message.alert(obj.message);
+          }
+    }
+});
+///////////////////////////////////ajax Process as following/////////////////////////////////////
+DECLARE
+V_EXCEPTION                EXCEPTION;
+V_COUNT                    VARCHAR2(50);
+V_STOP                     CHAR(1);
+l_photo_clob clob;
+l_photo_blob blob;
+BEGIN
+  l_photo_clob := apex_application.g_clob_01;
+  l_photo_blob := apex_web_service.clobbase642blob(p_clob => l_photo_clob);
+
+  Select COUNT(1) INTO V_COUNT from TRAINING.TRAINING_OPTIONS_SETUP where OPTION_ID= :P31_OPTION_ID_1 AND QUESTION_ID = :P31_QUESTION_ID_2;
+  IF V_COUNT > 0 THEN
+    apex_json.open_object;
+    apex_json.write( p_name => 'status', p_value => 'failed');
+    apex_json.write( p_name => 'message', p_value => 'Option Already selected.');
+    apex_json.close_object;
+    RETURN;
+  END IF;
+  
+    IF :P31_OPTION_ID_1 IS NOT NULL AND :P31_DESCRIPTION_1 IS NOT NULL THEN
+
+     BEGIN
+       INSERT INTO TRAINING.TRAINING_OPTIONS_SETUP
+       (QUESTION_ID,
+       OPTION_ID,
+       DESCRIPTION,
+       ACTIVE,
+       ORDER_BY,
+       IS_ANSWER_CORRECT,
+       DESCRIPTION_URDU,
+       USER_ID,
+       TERMINAL,
+       TRN_DATE,
+       IMAGE)
+    VALUES
+      (:P31_QUESTION_ID_2,
+       :P31_OPTION_ID_1,
+       :P31_DESCRIPTION_1,
+       :P31_ACTIVE_2,
+       :P31_ORDER_BY_2,
+       :P31_IS_ANSWER_CORRECT_1,
+       :P31_DESCRIPTION_URDU_1,
+       :GV_USER_MRNO,
+       :GV_TERMINAL,
+       SYSDATE,
+       l_photo_blob);
+       END;
+        apex_json.open_object;
+        apex_json.write( p_name => 'status', p_value => 'success');
+        apex_json.write( p_name => 'message', p_value => 'Record Saved Successfully.');
+        apex_json.close_object;
+
+            ELSE
+                apex_json.open_object;
+                apex_json.write( p_name => 'status', p_value => 'failed');
+                apex_json.write( p_name => 'message', p_value => 'Please Fill the Required Fields.');
+                apex_json.close_object;
+            END IF;
+
+                EXCEPTION
+                WHEN OTHERS THEN
+                    apex_json.open_object;
+                    apex_json.write( p_name => 'status', p_value => 'failed');
+                    apex_json.write( p_name => 'message', p_value => SQLERRM);
+                    apex_json.close_object;
+END;
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////get Image on custom id on laoge page/change item calue
+/////////create DA as follwoing ///////////////
+if ($v('P31_TRAINING_TOPIC_ID').length > 0){
+fetchData();
+}
+async function fetchData(){
+    await getData();
+}
+
+function getData(){
+
+ var canvas = document.getElementById('image-preview');
+ var context = canvas.getContext('2d');
+
+    canvas.style.display = 'inline-block';
+    apex.server.process ('GET_IMAGE'
+    ,{
+          x01: apex.item("P31_QUESTION_ID").getValue()
+    },
+    { dataType : 'json', 
+      async : true, 
+      success : function(pData)
+    {
+    const context = canvas.getContext('2d');
+             var image = new Image();
+               image.onload = function() {  
+                 context.drawImage(image,0,0,image.width, image.height, 0, 0, 150, 150); // destination rectangle
+               };
+               image.src = 'data:image/png;base64,' +pData.photobase64;
+         }
+    }
+    ).done( function(pData)
+        {            
+            //alert('Employee No '+ pData.photobase64);            
+        }
+    );
+}
+/////////////////////////////////////ajax call Process////////////
+declare 
+l_photo_clob clob;
+l_photo_blob blob;
+v_ques_id varchar2(50) :=apex_application.g_x01;
+
+begin
+    APEX_JSON.OPEN_OBJECT ;
+
+    SELECT IMAGE INTO l_photo_blob FROM TRAINING.TRAINING_QUESTION_SETUP WHERE QUESTION_ID = v_ques_id;
+   l_photo_clob := apex_web_service.blob2clobbase64(l_photo_blob);
+
+    APEX_JSON.WRITE( p_name  => 'photobase64' , p_value => l_photo_clob  ) ;
+    APEX_JSON.CLOSE_OBJECT;
+end;
+
 
