@@ -1,0 +1,6 @@
+$("#VitalsSummary").load(" #VitalsSummary");
+$('#vitalsum_id.a-Collapsible.is-collapsed').removeClass('is-collapsed').addClass('is-expanded');
+$('#vitalsum_id.a-Collapsible .a-Collapsible-content').show();
+
+
+ window.parent.document.getElementById('medicationbtnId').click();
