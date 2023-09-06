@@ -1,0 +1,11 @@
+apex.message.alert( "Load complete.", function(){
+
+}, 
+{
+    title: "System Message",
+    style: 'warning',
+    iconClasses: 'fa fa-exclamation-circle fa-3x',
+    okLabel: "Okay",
+
+} );
+
