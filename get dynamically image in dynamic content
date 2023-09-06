@@ -1,0 +1,56 @@
+DECLARE
+v_result clob;
+l_photo_clob clob;
+l_photo_blob blob;
+l_photo varchar2(50):= 'fa-user-md';
+BEGIN
+v_result:='<div class="cards-list" id="cards-list">';
+
+FOR i in(  SELECT TM.DEPTH INIT_STATE,
+        TM.NODE_NAME SCREEN_NAME,
+        T.ICON, 
+        TM.NODE_ID,
+        tm.parent_node_id,
+        s.app_id,
+        o.page_id
+   FROM SECURITY.EMP_TREE_MENU TM,
+        definitions.objects    o,
+        definitions.schemas    s,
+        SECURITY.TREE_MENU     T
+  WHERE TM.OBJECT_SCHEMA_ID = O.SCHEMA_ID(+)
+    AND TM.OBJECT_TYPE_ID = O.OBJECT_TYPE_ID(+)
+    AND TM.OBJECT_ID = O.OBJECT_ID(+)
+    and o.schema_id = s.schema_id(+)
+    AND (O.OBJECT_TYPE_ID = 'APX' OR O.OBJECT_TYPE_ID IS NULL)
+    AND TM.NODE_ID = T.NODE_ID
+    AND NVL(T.platform, 'W') IN ('M', 'B')
+    AND TM.MRNO = '00160000003821'
+    AND TM.LOCATION_ID = '001'
+    and TM.Parent_Node_Id is null
+
+)
+loop
+ 
+    SELECT I.ICON INTO l_photo_blob FROM  DUAL;  
+    l_photo_clob :='data:image/png;base64,'||apex_web_service.blob2clobbase64(l_photo_blob);
+--	 his.message_entry_category(l_photo_clob,'l_photo_clob');
+
+-- v_result:=v_result||'<div class="card" onclick="Page_Navigation('||i.app_id||','||i.page_id ||')">';
+if i.app_id is not null and i.page_id is not null then
+v_result:=v_result||'<div class="card" onclick="Page_Navigation('||i.app_id||','||i.page_id ||')">';
+else
+
+v_result:=v_result||'<div class="card my" onclick="Page_Navigation()">';
+end if;
+  v_result:=v_result||'<div class="card_image"> ';
+   v_result:=v_result||' <img src="'||l_photo_clob||'" id="'||i.SCREEN_NAME||'">';
+  	-- v_result:=v_result||'   <span class="'||l_photo||'">
+   v_result:=v_result||'</div> 
+  <div class="card_title title-black">
+    <p>'||i.SCREEN_NAME||' </p>
+  </div>
+</div>';
+end loop;
+v_result:=v_result||'</div>';
+return v_result;
+END;
