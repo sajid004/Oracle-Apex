@@ -1,0 +1,60 @@
+///////////////////////////////////////call function///////////////////////
+function callattachmentPage(){
+
+
+     
+   apex.server.process("PREPARE_URL", {
+
+        pageItems: [
+                    "P1_ORDER_TYPE_ID_S",
+                    "P1_ORDER_NO_S",
+                    "P1_LOCATION_ID_S",
+                    "P1_ORDER_LOCATION_ID_S",
+                    "P1_MEDICATION_TYPE_S",
+                    "P1_ADMINISTRATION_ORDER_S",
+                    "P1_OP_SERIAL_NO_S",
+                    "P1_DAY_NO_S",
+                    "P1_PD_SRNO_S",
+                    "P1_MRNO_SELECTED"
+                 ]
+   },
+   {
+       success: function(pData) 
+       {
+           if (pData.success === true) {
+                 console.log('Url output :'+pData.url);
+               apex.navigation.redirect(pData.url);
+           } else {
+               console.log("FALSE");
+           }
+       },
+       error: function(request, status, error)
+       {
+           console.log("status---" + status + " error----" + error);
+       }
+
+   }
+);
+}
+////////////////////////////////////////////////AJAX Call////////////////////////////////////////
+DECLARE
+    l_url varchar2(2000);
+    l_app number := v('APP_ID');
+    l_session number := v('APP_SESSION');
+BEGIN
+      
+    l_url := APEX_UTIL.PREPARE_URL(
+        p_url => 'f?p=' || l_app || ':2:'||l_session||'::NO::P2_ORDER_TYPE_ID_S,P2_ORDER_NO_S,P2_LOCATION_ID_S,P2_ORDER_LOCATION_ID_S,P2_MEDICATION_TYPE_S,P2_ADMINISTRATION_ORDER_S,P2_OP_SERIAL_NO_S,P2_DAY_NO_S,P2_PD_SRNO_S,P2_MRNO_S:'||:P1_ORDER_TYPE_ID_S||','||:P1_ORDER_NO_S||','||:P1_LOCATION_ID_S||','||:P1_ORDER_LOCATION_ID_S||','||:P1_MEDICATION_TYPE_S||','||:P1_ADMINISTRATION_ORDER_S||','||:P1_OP_SERIAL_NO_S||','||:P1_DAY_NO_S||','||:P1_PD_SRNO_S||','||:P1_MRNO_SELECTED,
+
+        p_checksum_type => 'SESSION');
+          apex_json.open_object;
+  apex_json.write('success', true);
+  apex_json.write('url', l_url);
+  apex_json.close_object;
+        exception
+when others then
+  apex_json.open_object;
+  apex_json.write('success', false);
+  apex_json.write('message', sqlerrm);
+  apex_json.close_object;
+END;
