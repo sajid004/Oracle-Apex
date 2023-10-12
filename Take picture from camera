@@ -87,3 +87,82 @@ const attachedCams = [];
     }  
 /////////////////////////////////////////////////drwa image on canvas///////////////////////////////////////////
  context.drawImage(video, 0, 0, 600, 450);
+////////////////////////////////////////////////PLSQL CODE////////////////////////////////////////////////////
+DECLARE
+  L_PHOTO_CLOB CLOB;
+  L_PHOTO_BLOB BLOB;
+  V_REF_KEY    varchar2(20);
+  v_stop       char(1);
+  v_alert      varchar2(2000);
+BEGIN
+  L_PHOTO_CLOB := APEX_APPLICATION.G_CLOB_01;
+ 
+  L_PHOTO_BLOB := APEX_WEB_SERVICE.CLOBBASE642BLOB( P_CLOB => L_PHOTO_CLOB );
+
+  --SELECT NVL(MAX(REFERENCE_KEY), 0) + 1 INTO V_MAX_ID FROM HIS.DOCUMENT_ATTACHMENT;
+    begin
+    HIS.SET_CONTEXT('ZONE_ID',:GV_ZONE_ID);
+    HIS.SET_CONTEXT('ORGANIZATION_ID',:GV_ORGANIZATION_ID);
+    HIS.SET_CONTEXT('LOCATION_ID',:GV_LOCATION_ID);
+    HIS.SET_CONTEXT('ORDER_LOCATION_ID',:GV_ORDER_LOCATION_ID); 
+    HIS.SET_CONTEXT('PHYSICAL_LOCATION_ID',:GV_PHYSICAL_LOCATION_ID);
+    HIS.SET_CONTEXT('USER_MRNO',:GV_USER_MRNO);
+    HIS.SET_CONTEXT('TERMINAL',:GV_TERMINAL); 
+    
+    chemo.pkg_medicine_preparation_hood.p_ins_doc_attachment(p_order_type_id => :P2_ORDER_TYPE_ID_S,
+                                                           p_order_no => :P2_ORDER_NO_S,
+                                                           p_location_id => :P2_LOCATION_ID_S,
+                                                           p_order_location_id => :P2_ORDER_LOCATION_ID_S,
+                                                           p_administration_order => :P2_ADMINISTRATION_ORDER_S,
+                                                           p_medication_type => :P2_MEDICATION_TYPE_S,
+                                                           p_day_no => :P2_DAY_NO_S,
+                                                           p_pd_sr_no => :P2_PD_SRNO_S,
+                                                           p_op_serial_no => :P2_OP_SERIAL_NO_S,
+                                                           p_document_type => :P2_BEFORE_AFTER_CHECK_BOX,
+                                                           p_document_id => null,
+                                                           p_document_name => 'img1',
+                                                           p_remarks => null,
+                                                           p_attach_by => :GV_USER_MRNO,
+                                                           p_stop => v_stop,
+                                                           p_alert_text => v_alert);
+    EXCEPTION
+    WHEN OTHERS THEN  
+        APEX_JSON.OPEN_OBJECT;
+        APEX_JSON.WRITE(P_NAME => 'result',P_VALUE =>v_alert||SQLERRM);
+        APEX_JSON.CLOSE_OBJECT;
+    end;
+
+    IF V_STOP is not null then
+ 
+        APEX_JSON.OPEN_OBJECT;
+        APEX_JSON.WRITE(P_NAME => 'result',P_VALUE =>v_alert);
+        APEX_JSON.CLOSE_OBJECT;
+        return;
+    else
+
+       SELECT max(CHEMO_PREP_DOC_NO) 
+        INTO V_REF_KEY FROM CHEMO.CHEMO_PREP_DOCUMENT CD
+        WHERE CD.ORDER_TYPE_ID       = :P2_ORDER_TYPE_ID_S
+        AND CD.ORDER_NO              = :P2_ORDER_NO_S
+        AND CD.LOCATION_ID           = :P2_LOCATION_ID_S
+        AND CD.ORDER_LOCATION_ID     = :P2_ORDER_LOCATION_ID_S
+        AND CD.MEDICATION_TYPE       = :P2_MEDICATION_TYPE_S
+        AND CD.ADMINISTRATION_ORDER  = :P2_ADMINISTRATION_ORDER_S
+        AND CD.PD_SR_NO              = :P2_PD_SRNO_S
+        AND CD.OP_SERIAL_NO          = :P2_OP_SERIAL_NO_S;
+
+         INSERT INTO HIS.DOCUMENT_ATTACHMENT (TABLE_NAME, REFERENCE_KEY, SERIAL_NUMBER, ATTACH_DOCUMENT,DOCUMENT_NAME,ATTACHED_BY,ATTACHED_DATE)
+         VALUES('CHEMO.CHEMO_PREP_DOCUMENT', V_REF_KEY, 1, L_PHOTO_BLOB,V_REF_KEY||'.png',:GV_USER_MRNO,sysdate);
+ 
+  --HIS.MESSAGE_ENTRY_CATEGORY('QUICK ID-02-:'||V_REF_KEY||':'||v_alert||'=>'||:P2_ORDER_TYPE_ID_S||','||:P2_ORDER_NO_S||','||:P2_LOCATION_ID_S||','||:P2_ORDER_LOCATION_ID_S||','||:P2_ADMINISTRATION_ORDER_S||','||:P2_MEDICATION_TYPE_S||','||:P2_DAY_NO_S||','||:P2_PD_SRNO_S||','||:P2_OP_SERIAL_NO_S,'LL');
+
+      APEX_JSON.OPEN_OBJECT;
+      APEX_JSON.WRITE(P_NAME => 'result', P_VALUE => 'success');
+      APEX_JSON.CLOSE_OBJECT;
+      END IF;
+EXCEPTION
+  WHEN OTHERS THEN
+    APEX_JSON.OPEN_OBJECT;
+    APEX_JSON.WRITE(P_NAME => 'result',P_VALUE =>v_alert||SQLERRM);
+    APEX_JSON.CLOSE_OBJECT;
+END;
