@@ -1,0 +1,89 @@
+////////////////////////////////////////////////////Region(static content code)/////////////////////
+<div>
+         <video  id="video" width="525" height="425" autoplay style="border-radius: 3%; box-shadow: 0px 0px 10px #B38583;"></video>
+          <!-- <canvas id="camera-canvas" width="380" height="280" style="display:none;  border-radius: 3%; box-shadow: 0px 0px 10px #B38583;"></canvas> -->
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+          <!-- <canvas id="canvasImage" width="380" height="280" style=" border-radius: 3%; box-shadow: 0px 0px 10px #DAB0B5;"></canvas> -->
+          <canvas id="canvasImage" width="525" height="425" style=" border-radius: 3%; box-shadow: 0px 0px 10px #DAB0B5;"></canvas>
+          <button type="button" id="btnCapture">Capture</button>
+</div>
+///////////////////////////////////////////////Global page code////////////////////////////////
+////////////on page load open camera using function//openCam();
+var canvas = document.getElementById('canvasImage');     
+var context = canvas.getContext('2d');
+var videoStream;
+async function openCam(){
+const attachedCams = [];
+    let indxCams=0;
+   	let stream1 = null;
+    try{
+  		await navigator.mediaDevices.enumerateDevices()
+    		.then((devices) => {
+      			devices.forEach((device) => {
+        		attachedCams[indxCams]=device.deviceId;
+        		indxCams=indxCams+1;
+      	});
+    	})
+    .catch((err) => {
+    	console.error(err.name + err.message);
+    
+    });
+		stream1 = await navigator.mediaDevices.getUserMedia({
+            // video: { width: 380, height: 280 } },
+            video: { width: 525, height: 425 } },
+    (stream) => {
+      const video = document.querySelector("video");
+      video.srcObject = stream;
+      video.onloadedmetadata = (e) => {
+        video.play();
+      };
+		});
+    }
+    catch(error) {
+    	alert(error.message);
+    	return;
+    }
+    videoStream = stream1;
+    video.srcObject = stream1;
+}
+/////////////////////////////SAVE IMAGE//////////////////////////
+    function saveImageInDB(){
+        apex.server.process(
+        'SAVE_PHOTO',
+        {
+            p_clob_01: canvasImage.toDataURL().match(/,(.*)$/)[1],
+                pageItems: [
+                    "P2_ORDER_TYPE_ID_S",
+                    "P2_ORDER_NO_S",
+                    "P2_LOCATION_ID_S",
+                    "P2_ORDER_LOCATION_ID_S",
+                    "P2_MEDICATION_TYPE_S",
+                    "P2_ADMINISTRATION_ORDER_S",
+                    "P2_OP_SERIAL_NO_S",
+                    "P2_DAY_NO_S",
+                    "P2_PD_SRNO_S",
+                    "P2_MRNO_S",
+                    "P2_BEFORE_AFTER_CHECK_BOX"
+                 ]
+        },
+            {
+            success: function(data) {
+               // alert(data.result )
+                    if (data.result == 'success') {
+                        apex.message.showPageSuccess('Picture Saved Successfully.');
+                        
+                            setTimeout(function() {
+                            $('#t_Alert_Success').fadeOut('fast');
+                            }, 2000);
+                    }
+                    else
+                    {
+                        apex.message.alert('Unable to save image! '+ data.result );
+                    }
+                    }
+        }
+        );
+    }  
+/////////////////////////////////////////////////drwa image on canvas///////////////////////////////////////////
+ context.drawImage(video, 0, 0, 600, 450);
