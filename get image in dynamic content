@@ -1,0 +1,34 @@
+DECLARE
+v_result clob;
+l_photo_clob clob;
+
+BEGIN
+v_result:='<div class="cards-list" id="cards-list">';
+
+   For i in (select  clob001, c001,seq_id
+ 		 from apex_collections
+  		 where collection_name='BEFOREIMAGESCOLLECTION'
+   )loop
+
+ l_photo_clob :='data:image/png;base64,'||i.clob001; 
+
+  v_result:=v_result||'<div class="card">';
+  v_result:=v_result||'<div class="card_image"> 
+                       <button type="button" style="margin-left:7px;margin-top:7px;cursor: pointer;" id=view onClick="viewBeforeImage('''||i.c001||''')">'||'View'||' </button>  
+                       <button type="button" style="float:right; margin-right:7px;margin-top:7px;cursor: pointer;" onclick="deleteBeforeImage('''||i.c001||''','''||TO_CHAR(i.seq_id)||''')">Delete </button>';
+  v_result:=v_result||' <img src="'||l_photo_clob||'">'; 
+
+   v_result:=v_result||'</div> 
+  <div class="card_title title-black">
+ 
+  </div>
+  
+</div>';
+end loop;
+--<button id='||i.c001||' onClick="deleteImage()">'||'Delete'||' </button>
+v_result:=v_result||'</div>';
+return v_result;
+EXCEPTION
+WHEN OTHERS THEN
+return v_result;
+END;
