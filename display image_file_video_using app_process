@@ -1,0 +1,40 @@
+
+//add process with ajax  on shared components
+DECLARE
+VBLOB blob;
+v_mime_type varchar2(500);
+vfile_name varchar2(500);
+BEGIN
+  SELECT DB_FIELD,
+CASE WHEN UPPER(DOCUMENT_TYPE) in ('PDF','XLSX','XLS','DOCS','TXT', 'DOCX', 'avi', 'MP4')
+THEN 'application/'|| UPPER(DOCUMENT_TYPE)
+WHEN UPPER(DOCUMENT_TYPE) in ('JPG','PNG','JPEG')
+THEN 'image/'|| UPPER(DOCUMENT_TYPE)
+WHEN UPPER(DOCUMENT_TYPE) in ('avi','MP4')
+THEN 'video/'|| UPPER(DOCUMENT_TYPE)
+
+END , DOCUMENT_NAME
+INTO VBLOB, v_mime_type, vfile_name
+FROM LOB.DOCUMENTS_STORE
+WHERE DOCUMENT_ID = V('P199_SEQ_ID') ; --AND EGUIDED_ID=V('P199_GUIDED_ID');/* your item name*/
+OWA_UTIL.MIME_HEADER(v_mime_type,FALSE);
+  HTP.P('Content-Length: ' || DBMS_LOB.GETLENGTH(VBLOB)); 
+  HTP.P('Content-Disposition: filename="' || vfile_name || '"');
+  OWA_UTIL.HTTP_HEADER_CLOSE;
+  WPG_DOCLOAD.DOWNLOAD_FILE(VBLOB);
+  
+/*owa_util.mime_header(v_mime_type,false);
+htp.p('Content-Length: ' || dbms_lob.getlength(v_Blob));
+owa_util.http_header_close;
+wpg_docload.download_file(v_Blob);*/
+exception
+when no_data_found then
+null;
+END;
+////////////////////////////////////////////////////////////////////Create Page like follwoing//////////////////////////
+//create page then create a region with URL Type and then create itmes file name, mime type, seq id, guided id then go to region Attributre then 
+// URL: f?p=&APP_ID.:0:&SESSION.:APPLICATION_PROCESS=Load_files:NO
+//Inclusion Mode : IFrame
+//IFrame Attributes: style="width:100%; height:850px"
+//make a link of any colunn and pass seq id or document id like (199) page of generic page
+  
