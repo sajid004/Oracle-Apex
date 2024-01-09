@@ -58,3 +58,63 @@ when others then
   apex_json.write('message', sqlerrm);
   apex_json.close_object;
 END;
+///////////////////////////////////////////////////////////////For Single parameter using js///////////////////////////////////////////////////////////////////////
+function Page_Navigation(application, page){
+	
+	/*--application_id and page_id  is null means parent node then open child menu popup
+	   else oprn the target application page-- */
+	// apex.item('P11_SELECTED_MENU').setValue(node);
+    // if (node==123456789){
+    //         apex.theme.openRegion('Favorites_Menu')
+    // }
+    // else{
+    // 	apex.item('P11_SELECTED_MENU').setValue(node);
+
+	// if ( application == -1 || page == -1 ) {
+		
+    //     apex.theme.openRegion('Child_Menu');
+	// }
+	//else{
+            var url = 'f?p='+application+':'+page+':'+apex.item('pInstance').getValue()+':::1';
+                apex.server.process("PREPARE_URL", {
+                x01: url
+            }, 
+            {
+                success: function(pData) 
+                {
+                    if (pData.success === true) {
+                        apex.navigation.redirect(pData.url);
+                    } else {
+                        console.log("FALSE");
+                    }
+                },
+                error: function(request, status, error) 
+                {
+                    console.log("status---" + status + " error----" + error);
+                }
+            }
+            );
+        }
+   // }
+//}
+
+
+
+//////////////////////////////////////Ajax Call///////////////////////////////////
+DECLARE
+  result varchar2(32767);
+BEGIN
+      
+   result:=apex_util.prepare_url(apex_application.g_x01);
+      
+    apex_json.open_object;
+  apex_json.write('success', true);
+  apex_json.write('url', result);
+  apex_json.close_object;
+        exception
+when others then
+  apex_json.open_object;
+  apex_json.write('success', false);
+  apex_json.write('message', sqlerrm);
+  apex_json.close_object;
+END;
