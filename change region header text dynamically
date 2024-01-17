@@ -1,0 +1,4 @@
+//add region label id like myregtitle and set vlaue in item which show in header
+$x('myregtitle').innerHTML =$x('P7_DNAME').value;
+
+<i id="myregtitle"></i>
