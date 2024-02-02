@@ -1,0 +1,10 @@
+apex.navigation.redirect("f?p=227:510:&APP_SESSION.");
+var popup = apex.widget.waitPopup();
+setTimeout(function (){
+    $('.u-Processing span').remove();
+    $('.u-Processing').css('background-color','white');
+    $('.u-Processing').append('<img class="apex-logo-img" src="#APP_FILES#skmlogo.png" alt="" height="100%" width="100%" style="animation: rotation 3s infinite linear;">');
+    //$('#apex_wait_overlay').append('<span class="blink">Please wait. Good things are on the way.</span>');
+    //$('#apex_wait_overlay span').css({'display':'flex','justify-content':'center','align-items':'center','position':'absolute','top':'50%','left':'50%','transform': 'translate(-50%, -50%)','margin-top': '30px'})
+},10)
+apex.navigation.redirect($v('P152_REDIRECT_URL'));
