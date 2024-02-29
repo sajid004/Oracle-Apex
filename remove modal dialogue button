@@ -1,0 +1,3 @@
+//Also, into page's Javascript, Function and global variable declaration, put
+var button = parent.$('.ui-dialog-titlebar-close'); //get the button
+button.hide(); //hide the button
