@@ -75,7 +75,8 @@ function Page_Navigation(application, page){
     //     apex.theme.openRegion('Child_Menu');
 	// }
 	//else{
-            var url = 'f?p='+application+':'+page+':'+apex.item('pInstance').getValue()+':::1';
+		var url = 'f?p=110:62:'+apex.item('pInstance').getValue()+':::1:P62_SELECTED_SUBJECT:'+apex.item('P21_SELECTED_SUBJECTID').getValue();
+            //var url = 'f?p='+application+':'+page+':'+apex.item('pInstance').getValue()+':::1';
                 apex.server.process("PREPARE_URL", {
                 x01: url
             }, 
