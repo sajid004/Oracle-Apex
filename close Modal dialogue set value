@@ -1,0 +1,6 @@
+//on main page create item for set value from dialogue and create button(openDialgue) for open dialogue
+//create DA on closeDialog and select type is button which open by required dialogue
+//and in true Action setValue DialogReturnItem and select Modal Dialog page item and in effectd element select main page item 
+
+//In Modal dialog page create item and button for set value and go to back main page
+//create DA on button and select CloseDialog DA and ItemToReturn set value which send to main page
