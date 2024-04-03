@@ -1,0 +1,102 @@
+// call on whcih event like item change or lose focus etc.
+        completeMRNO();
+// paste on page declaration 
+async function completeMRNO() {    
+    try{
+        var promise1 = await setMR();
+        $s('P8_DISP_MRNO', promise1.displayMr)
+        $s('P8_FULL_NAME', promise1.fname)
+        $s('P8_LOCATION_ID', promise1.loc)
+        $s('P8_MRNO', promise1.mr)
+
+        //apex.item('P8_LOCATION_ID').refresh();
+        apex.jQuery('#P8_LOCATION_ID').trigger('refresh');
+        console.log('example1 promise 1', promise1.loc);
+       //apex.item('P8_LOCATION_ID').setValue( apex.item('P8_LOCATION_ID').getR1Element().options[0].value);
+    }
+    catch(e){
+        console.error(e);
+    }
+    finally{
+        console.log('Finally Called');
+    }
+}
+////////////////////////////////////////////////////////////
+async function setMR() {
+    return apex.server.process(
+        "PROCEURE_CALL", {
+           pageItems :[
+               'GV_TERMINAL',
+               'P8_ORG_ID',
+               'P8_DISP_MRNO',
+               'P8_MRNO',
+               'P8_FULL_NAME'
+           ]
+        }
+    );
+}
+//////////////////////////////////////////////////////PLSQL CODE as AJAX///////////////////////////////////
+DECLARE
+V_PATIENT_TYPE_ID DEFINITIONS.PATIENT_TYPE.PATIENT_TYPE_ID%TYPE;
+V_ALERT_TEXT VARCHAR2(4000);
+V_STOP CHAR(1) := 'N';
+
+V_LOCATION_SHORT_DESC VARCHAR2(50);
+V_LOCATION_DESC VARCHAR2(200);
+V_STOP1 CHAR(1);
+V_ALERT_TEXT1 VARCHAR2(4000);
+V_COUNT NUMBER;
+V_LOCATION_ID VARCHAR2(3);
+BEGIN
+    if :P8_DISP_MRNO IS NOT NULL then 
+        -- CALL THE PROCEDURE
+      HIS.SET_CONTEXT('ORGANIZATION_ID', :P8_ORG_ID);
+        HIS.PKG_S30FRM00003_LOGIN.VALIDATE_MRNO(P_USER_MRNO            => NULL,
+                                                P_LOCATION_ID          => NULL,
+                                                P_PHYSICAL_LOCATION_ID => NULL,
+                                                P_TERMINAL             => NULL,
+                                                P_DISP_MRNO            => :P8_DISP_MRNO,
+                                                P_PREFIX               => '600',
+                                                P_PREFIX_LOCATION_ID   => '001',
+                                                P_MRNO                 => :P8_MRNO,
+                                                P_NAME                 => :P8_FULL_NAME,
+                                                P_PATIENT_TYPE_ID      => V_PATIENT_TYPE_ID,
+                                                P_ALERT_TEXT           => V_ALERT_TEXT,
+                                                P_STOP                 => V_STOP);
+      
+    :P8_DISP_MRNO := :P8_MRNO;
+
+    BEGIN
+        -- CHECK USER LOCATION
+        HIS.PKG_S30FRM00003_LOGIN.USER_LOGIN_LOCATION(P_TERMINAL            => :GV_TERMINAL,
+                                                      P_ORGANIZATION_ID     => :P8_ORG_ID,
+                                                      P_LOCATION_ID         => V_LOCATION_ID,
+                                                      P_LOCATION_SHORT_DESC => V_LOCATION_SHORT_DESC,
+                                                      P_LOCATION_DESC       => V_LOCATION_DESC,
+                                                      P_MRNO                => :P8_MRNO,
+                                                      P_USER_NAME           => :P8_FULL_NAME,
+                                                      P_STOP                => V_STOP1,
+                                                      P_ALERT_TEXT          => V_ALERT_TEXT1,
+                                                      P_COUNT               => V_COUNT);
+      
+      IF NVL(V_STOP, 'N') = 'Y' THEN
+        HIS.MESSAGE_ENTRY_CATEGORY(V_ALERT_TEXT, 'USER_LOGIN_LOCATION');
+      END IF;  
+      END;
+      :P8_LOCATION_ID := V_LOCATION_ID;
+    end if;
+
+
+    
+            apex_json.open_object;
+            apex_json.write( p_name => 'status', p_value => 'success');
+            apex_json.write( p_name => 'displayMr', p_value => :P8_DISP_MRNO);
+            apex_json.write( p_name => 'mr', p_value => :P8_MRNO);
+            apex_json.write( p_name => 'fname', p_value => :P8_FULL_NAME);
+            apex_json.write( p_name => 'loc', p_value => :P8_LOCATION_ID);
+            apex_json.close_object;   
+EXCEPTION
+      WHEN OTHERS THEN
+        NULL;
+END;
+///////////////////
