@@ -1,0 +1,18 @@
+////////////////////static app file upload file from db//////////////////////////////
+select *
+from all_objects o
+where o.OBJECT_NAME like 'WWV_FLOW_COMPANY_STATIC_FILES'
+AND O.OWNER = 'APEX_230100' for update;
+ 
+ 
+select *
+from APEX_230100.wwv_flow_company_static_files T
+WHERE t.id = 370481813058617594 for update
+/////////////////set logo text empty in user interface attribtue///////////////////////////////
+SELECT T.LOGO_TEXT
+FROM APEX_230100.APEX_APPLICATIONS T
+WHERE T.application_id = 110;
+
+SELECT T.LOGO_TEXT
+FROM APEX_230100.wwv_flows T
+WHERE T.ID = 110;
