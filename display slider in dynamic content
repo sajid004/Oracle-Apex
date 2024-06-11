@@ -1,0 +1,261 @@
+//pase code on Dynamic content
+DECLARE
+v_result clob;
+l_photo_clob clob;
+l_photo_blob blob; 
+l_found boolean := false;
+BEGIN
+v_result:='<section class="auto-slider">
+            <div id="slider">
+                <figure>';
+FOR i in(  
+SELECT D.IMAGE
+  FROM HIS.LOGIN_FORM_SETUP        S,
+       HIS.LOGIN_FORM_SETUP_DETAIL D
+     --  his.v_current_database      v
+ WHERE S.SETUP_ID = D.SETUP_ID
+   --and s.location_id = v.LOCATION_ID
+   AND D.IMAGE_TYPE = 'S'
+   AND NVL(D.ACTIVE, 'N') = 'Y'
+   ORDER BY D.DETAIL_ID
+)
+loop
+ if dbms_lob.getlength(i.IMAGE) > 0 then l_found := true; end if;
+  SELECT I.image INTO l_photo_blob FROM  DUAL;  
+  l_photo_clob :='data:image/png;base64,'||apex_web_service.blob2clobbase64(l_photo_blob); 
+  
+  v_result:=v_result||' <img src="'||l_photo_clob||'"   alt="Image" style="height:200px">';
+end loop;
+
+ v_result:=v_result||
+	          '</figure>
+             	<div class="indicator"></div>
+   				</div>
+					</section>'; 
+return v_result;
+EXCEPTION
+ WHEN OTHERS THEN 
+null;
+END;
+ //////////////paste code in inline CSS////////////////////////////////////////////////////////////////////////////
+.main_logo{
+    display: flex;
+    align-items: center;
+    margin-left: 10px;
+}
+ .logo{
+	 margin-top: 5px;
+    margin-bottom: 3px; 
+ width: 80px;
+ /* height: 150px;
+ display: inline; */
+ }
+ .heading_desc{
+     line-height: 1.5;
+     font-size: 16;
+     font-weight: 800;
+ }
+ .heading_short_desc{
+     font-size: 14;
+ }
+.frosted {
+padding-right: 10px;
+}
+ .frosted .apex-item-display-only, .frosted .apex-item-text, .frosted .apex-item-select{
+     font-weight: 700;
+ }
+ .feature-box {
+    box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;
+    padding: 0px 0px 10px 0px;
+    margin: 20px;
+    border-radius: 15px;
+    width: 170px;
+    height: 170px;
+    float: left;
+    text-align: center;
+    vertical-align: middle;
+  }
+  .panel {
+    background: linear-gradient(0deg, rgba(202, 204, 204, 1) 0%, rgba(255, 255, 255, 1) 100%);
+    height: 247px;
+    width: 100%;
+    box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;
+    vertical-align: middle;
+    border-radius: 10px;
+    padding-top: 20px;
+    padding-left: 20px;
+    overflow: hidden;
+  }
+  .panel-img {
+    height: 110px;
+    border-radius: 10px;
+    margin-top: 10px;
+  }
+  .box1 {
+    font-family: "Times New Roman", Times, serif;
+    font-weight: bold;
+    font-size: 12pt;
+    background-color: #A11692;
+    padding: 10px;
+    color: white;
+  }
+  .box2 {
+    font-family: "Times New Roman", Times, serif;
+    font-weight: bold;
+    font-size: 12pt;
+    background-color: rgb(15, 163, 173);
+    padding: 10px;
+    color: white;
+  }
+  .box3 {
+    font-family: "Times New Roman", Times, serif;
+    font-weight: bold;
+    font-size: 12pt;
+    background-color: rgb(153, 185, 9);
+    padding: 10px;
+    color: white;
+  }
+  .box4 {
+    font-family: "Times New Roman", Times, serif;
+    font-weight: bold;
+    font-size: 12pt;
+    background-color: rgb(236, 123, 16);
+    padding: 10px;
+    color: white;
+  }
+
+.leftbox {
+                float:left; 
+                background:Red;
+                width:25%;
+            }
+.middlebox{
+                float:left; 
+                background:Green;
+            }
+.rightbox{
+                float:right;
+                width:25%;
+
+            }
+
+.auto-slider{
+    position: relative;
+    box-sizing: content-box;
+    display: inline-block;
+    padding: 10px 10px 20px;
+    background: #fff;
+    max-width: 95%;
+    margin: 0 auto;
+    overflow: hidden;
+    border-radius: 4px;
+    box-shadow: 1px 1px 6px rgba(0, 0, 0, 0.4);
+
+}
+
+div#slider { overflow: hidden; }
+div#slider figure img { width: 20%; height: 100%; float: left; }
+div#slider figure { 
+  position: relative;
+  width: 500%;
+  margin: 0;
+  left: 0;
+  text-align: left;
+  font-size: 0;
+  animation: 25s sliding ease infinite; 
+}
+
+/* Slider indicator */
+.indicator{
+    width: 100%;
+    max-width: 720px;
+    height: 6px;
+    background: #e41b17;
+    position: absolute;
+    bottom: 0;
+    animation: indicating 5s ease infinite; 
+}
+
+@keyframes sliding{
+            0%{left: 0%; }
+            20%{left: -100%;}
+            40%{left: -200%;}
+            /* 60%{left: -300%;} */
+            /* 80%{left: -400%;} */
+            100%{left: 0%;}
+        }        
+        
+@keyframes indicating{
+            from{
+                left: -100%;
+            }
+            to{
+                left: 0;
+            }
+}  
+
+
+.t-Region{
+    border-radius: 10px;
+box-shadow: rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px;
+}
+
+.t-Region-header{
+    border-radius: 10px 10px 0px 0px;
+}
+
+@media (min-width: 1400px) {
+    #contmain{
+    width: 85%;
+    margin-top: 5%;
+    margin-left: 8%;
+    }
+}
+
+
+@media (max-width: 700px) {
+    .page-margin{
+       margin-block-start: 0rem !important;
+    }
+    .slider{
+        margin-block-start: 0rem !important;
+        width:98%;
+        }
+}
+/*
+@media (min-width: 1400px) {
+    .page-margin{
+       margin-block-start: 6rem !important;
+    }
+}
+
+@media (max-width: 700px) {
+    .logo{
+       width: 100%;
+       align-items: center;
+       align-content: center;
+    }
+}
+
+
+@media (max-width: 480px) {
+    .text{
+       font-size: small;
+       font-weight: normal;
+    }
+   
+    div#slider { height: 150px; }
+}
+
+@media (min-width: 800px) {
+    .text{
+       font-weight: bold;
+       
+    }
+}*/
+
+.sign-box{
+    width: 100%;
+    margin-right: 0px;
+}
+
