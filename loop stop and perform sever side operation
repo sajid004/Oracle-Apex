@@ -1,0 +1,227 @@
+//call follwoing function on required option
+mainFunction();
+//page level code and line 125 custom loop call for stop loop and perform any operation
+ let ajxCreateCollection = async () => apex.server.process (
+            'CreateImagesCollection',{                
+            },
+            {
+                 dataType : 'json'
+            }
+        ); 
+  
+
+let ajxSaveBeforeImgCollection=async (img_clob,id,document_id,showImgFrom)=>
+    apex.server.process(
+            'SaveBeforePrepImagesInCollection',{
+                p_clob_01: img_clob,
+                x01: id,
+                x02:document_id,
+                x03:showImgFrom
+
+            }, 
+            {   
+                success: function (response) {
+                if (response.alert_text != 0) {
+                    apex.message.showErrors([
+                            {
+                                    type: 'error',
+                                    location: 'page',
+                                    message:response.alert_text,
+                                    unsafe: false
+
+                            }
+                    ]);
+                }
+                },
+                dataType:"json"
+            }
+        );
+
+let ajxSaveAfterImgCollection=async (img_clob,id,document_id,showImgFrom)=>
+   apex.server.process(
+                'SaveAfterPrepImagesInCollection',
+                {
+                p_clob_01:img_clob,
+                x01: id,
+                x02:document_id,
+                x03:showImgFrom
+
+                }, 
+                {
+                success: function (response) {
+                if (response.alert_text != 0) {
+                    apex.message.showErrors([
+                            {
+                                    type: 'error',
+                                    location: 'page',
+                                    message:response.alert_text,
+                                    unsafe: false
+
+                            }
+                    ]);
+                }
+                }
+                , dataType:"json"
+                }
+                                                 
+             );
+
+ let ajxImgServiceCall=async (repurl)=>
+                         $.ajax(
+                                {
+                                //url: 'https://wlsd.skm.org.pk:8008/reportcalling/pdf/from_server',            
+                                url: 'https://wlsqu.skm.org.pk:8008/reportcalling/pdf/from_local_path',            
+                                type: "get",
+                                data: { 
+                                    
+                                    reportPath:(repurl.replace(' ','-'))
+                                },
+                                success: function(response) 
+                                {
+                                    console.log('---=success=---')
+                                },
+                                error: function(response) 
+                                {
+                                    console.log('---=error=---')
+                                }
+
+                                });
+
+
+async function mainFunction(){
+let isCollectionCreated; 
+console.log('***************************') 
+    isCollectionCreated = await ajxCreateCollection().then( (response)=>{ 
+            if(response.status =='success'){      
+                 console.log('Collection Created Successfully '+response.status);   
+             return true;
+            }
+            else{
+             return false;
+            }
+        }); 
+
+    if (isCollectionCreated){
+        console.log('Going to iterate over IG ');
+        /////////////////////////////////////////////////////////////////////////
+          var model = apex.region("before_images_ig").widget().interactiveGrid("getViews", "grid").model;
+          var total_records= model.getTotalRecords();
+ 
+           var model1 = apex.region("after_images_ig").widget().interactiveGrid("getViews", "grid").model;
+          var total_records1= model1.getTotalRecords();
+ 
+        processBeforeImageRow(model,total_records);
+        processAfterImageRow(model1,total_records1);
+
+        //////////////////////////////////////////////////////////////////////////
+    }
+                    }
+
+
+let i = 0;
+let serviceCall;
+let saveCollectionRow;
+
+async function processBeforeImageRow(model,total_records) { 
+             console.log("total_records"+total_records)
+      
+            if (i < total_records) {
+                var igrow = model.getRecord(i);
+
+                if (igrow) {
+                    var file_path = igrow[model.getFieldKey("FILE_ACCESS_PATH")];
+                    var id = igrow[model.getFieldKey("CHEMO_PREP_DOC_NO")];
+                    var document_id = igrow[model.getFieldKey("DOCUMENT_ID")];
+                    var document_name = igrow[model.getFieldKey("DOCUMENT_NAME")];
+
+                    if (document_id!=null && document_id.trim()!==''){
+                        let repurl= file_path+ document_name;
+                        console.log(repurl);
+                        let regex = /\//g;
+                        let result = repurl.replace(regex, "\\");
+                        repurl = result;
+                       
+                      serviceCall = await ajxImgServiceCall(repurl).then( (response)=>{        
+                                console.log('Response from Image Saving Process : '+ response.data+"index"+i);            
+                                return response.data;
+                              });
+                                     
+                          console.log('service call'+serviceCall);
+                          saveCollectionRow = await ajxSaveBeforeImgCollection(serviceCall,id,document_id,'OS').then( (response)=>{        
+                                console.log('Response from Image Saving Process : '+response.alert_text+"index"+i);            
+                                return response;
+                             });
+                                                    
+                    }
+                    else
+                    {
+                    
+                     console.log('in else condition');
+                     saveCollectionRow = await ajxSaveBeforeImgCollection('',id,document_id,'DB').then( (response)=>{        
+                                console.log('Response from Image Saving Process : '+response.alert_text+"index"+i);            
+                                return response;
+                       });
+                    }           
+                    console.log('Image Saved Called : '+JSON.stringify(saveCollectionRow)+"index"+i);
+                    }
+                    
+                i++;
+             processBeforeImageRow(model,total_records);
+            }
+         apex.region('before_prep_images').refresh();
+        }
+
+let ii = 0;
+let serviceCall1;
+let saveCollectionRow1;
+
+async function processAfterImageRow(model,total_records) { 
+             console.log("total_records"+total_records)
+      
+            if (ii < total_records) {
+                var igrow = model.getRecord(ii);
+
+                if (igrow) {
+                    var file_path = igrow[model.getFieldKey("FILE_ACCESS_PATH")];
+                    var id = igrow[model.getFieldKey("CHEMO_PREP_DOC_NO")];
+                    var document_id = igrow[model.getFieldKey("DOCUMENT_ID")];
+                    var document_name = igrow[model.getFieldKey("DOCUMENT_NAME")];
+
+                    if (document_id!=null && document_id.trim()!==''){
+                        let repurl= file_path+ document_name;
+                        console.log(repurl);
+                        let regex = /\//g;
+                        let result = repurl.replace(regex, "\\");
+                        repurl = result;
+                       
+                      serviceCall1 = await ajxImgServiceCall(repurl).then( (response)=>{        
+                                console.log('Response from Image Saving Process : '+ response.data+"index"+ii);            
+                                return response.data;
+                              });
+                      
+                       saveCollectionRow = await ajxSaveAfterImgCollection(serviceCall1,id,document_id,'OS').then( (response)=>{        
+                                console.log('Response from Image Saving Process : '+response.alert_text+"index"+i);            
+                                return response;
+                             });
+                                                    
+                    }
+                    else
+                    {
+                    console.log('in else condition1');
+                   
+                        saveCollectionRow1 = await ajxSaveAfterImgCollection('',id,document_id,'DB').then( (response)=>{        
+                                            console.log('Response from Image Saving Process : '+response.alert_text+"index"+ii);            
+                                            return response;
+                                 });
+                   
+                    
+                    }           
+                
+                    }
+                    
+                ii++;
+                processAfterImageRow(model,total_records);
+            }
+         apex.region('after_prep_images').refresh();
+        }
+
