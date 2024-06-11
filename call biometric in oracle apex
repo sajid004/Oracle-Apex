@@ -1,0 +1,18 @@
+//call following function on button click
+sendMessageToFlutter();
+//for check face id call following function on page load
+sendMessageToFlutterFaceId();
+//add follwoing code for change icon finger/face
+if($v('P9999_FACE') == 'Y'){
+     var buttons = document.getElementById("finger_print_btn");
+    buttons.innerHTML = '<img src="#APP_FILES#face_id.png" />';
+}
+else{
+   var buttons = document.getElementById("finger_print_btn");
+    buttons.innerHTML = '<img src="#APP_FILES#fingerprint-50.png" />';
+}
+// for defualt icon copy Button Template on user interface and set icon within span of button
+<button onclick="#JAVASCRIPT#" class="t-Button #BUTTON_CSS_CLASSES#" type="button" #BUTTON_ATTRIBUTES# id="#BUTTON_ID#"><span class="t-Button-label"><img src="#APP_FILES#fingerprint-50.png"></span></button>
+//add #APP_FILES#webauthn.js in javascript URL on User Interface attribute
+//upload webauthn file on static app file 
+//in my case I have upload file on github with name of webauthn
