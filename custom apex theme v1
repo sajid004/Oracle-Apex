@@ -1,0 +1,46 @@
+//go to theme 42 and in style section create/upload file skm_vita css file
+//and Add Style then name Vita(SKM)
+//add in Input Parameter File URLs : #THEME_IMAGES#less/theme/Vita.less
+//add in Output CSS File URL : #THEME_DB_FILES#vita_skm.css
+//////////////////////////////////////////////////////////////add in JSON Configuration : following code////////////////////////
+{"classes":[],"vars":{"@g_Region-BG":"#f6f6f6","@g_Region-FG":"#262626","@g_Form-Item-BG":"#ffffff","@g_Form-Item-FG":"#000000","@g_Form-Label":"#000000","@l_Button-Danger-BG":"#b80f00","@l_Button-Danger-Text":"#ffffff","@l_Button-Warning-BG":"#ffbe0c","@l_Button-Warning-Text":"#000000","@l_Button-Success-BG":"#217500","@l_Button-Success-Text":"#ffffff","@l_Button-Hot-BG":"#045fb4","@l_Button-Hot-Text":"#ffffff","@g_Accent-BG":"#0455a0","@g_Color-Palette-1":"#1d76a5","@g_Color-Palette-1-FG":"#ffffff","@g_Color-Palette-2":"#0c7484","@g_Color-Palette-2-FG":"#e4f9fd","@g_Color-Palette-3":"#1c7472","@g_Color-Palette-3-FG":"#f0fcfb","@g_Color-Palette-4":"#2a7a5d","@g_Color-Palette-4-FG":"#f0faf6","@g_Color-Palette-5":"#4c7733","@g_Color-Palette-5-FG":"#ffffff","@g_Color-Palette-8":"#ae4d10","@g_Color-Palette-8-FG":"#ffffff","@g_Color-Palette-9":"#d6251b","@g_Color-Palette-9-FG":"#ffffff","@g_Color-Palette-10":"#d31e57","@g_Color-Palette-10-FG":"#ffffff","@g_Color-Palette-11":"#b73985","@g_Color-Palette-11-FG":"#ffffff","@g_Color-Palette-15":"#5b7081","@g_Color-Palette-15-FG":"#ffffff","@g_Disabled-BG":"#676767","@g_Disabled-FG":"#ffffff","@irrBg":"#ffffff"},"customCSS":".t-Form-label,t-Button-label {\n  font-weight: 600;\n}\n.apex-item-text,input.apex-item-text.apex-item-popup-lov{\n    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);\n}\ninput.apex-item-text.apex-item-popup-lov{\n    background-color: lemonchiffon;\n}\n:root{\n--a-button-font-weight : 600;\n--a-field-input-state-border-color : #757474;\n--a-field-input-border-color : #757474;\n--a-button-state-border-color : #757474;\n--a-button-hover-border-color : #757474;\n--a-iconlist-item-background-color: #ffffff;\n}\n.apex-item-multi:disabled, .apex-item-select:disabled, .apex-item-text:disabled, .apex-item-textarea:disabled,\n .datetimepicker_newMonth:disabled,.apex-item-multi.apex_disabled, .apex-item-select.apex_disabled, .apex-item-text.apex_disabled, .apex-item-textarea.apex_disabled,\n .datetimepicker_newMonth.apex_disabled,.apex-item-multi:read-only, .apex-item-select.readonly, .apex-item-text:read-only, .apex-item-textarea:read-only,\n .datetimepicker_newMonth:read-only, .u-TF-item--select:disabled, .u-TF-item--text:disabled, select.group_selectlist:disabled,\n  select.listmanager:disabled,a-date-picker.apex_disabled, a-date-picker.is-disabled, a-date-picker:read-only{\n    filter: brightness(95%);\n    opacity: 100%; \n}\nspan.t-Icon--left{\n    margin-right: 2px;\n}","useCustomLess":"N"}
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//backup complete app then perforam following step
+//Change Theme Identification Number and set 42 theme to 101 theme number
+//unsubscribe theme from Theme Repository and subscribe with main 100 app theme and 100 app theme subscribe with Theme Repository
+//Restore Theme Subscription with Match Template: By Template Name
+///////////////////////CSS of SKM Standard Region/////////////////////////////////////////
+<div role="region" aria-label="#TITLE!ATTR#" class="t-Region t-Region--accent1 #REGION_CSS_CLASSES#" style="border-radius: 10px;"
+    id="#REGION_STATIC_ID#" #REGION_ATTRIBUTES#>
+    <div class="t-Region-header" style="border-radius: 10px 10px 0px 0px;">
+        <div class="t-Region-headerItems t-Region-headerItems--title">
+            <span class="t-Region-headerIcon"><span class="t-Icon #ICON_CSS_CLASSES#" aria-hidden="true"></span></span>
+            <h2 class="t-Region-title" id="#REGION_STATIC_ID#_heading" data-apex-heading>#TITLE#</h2>
+        </div>
+        <div class="t-Region-headerItems t-Region-headerItems--buttons">
+            #COPY##EDIT#<span class="js-maximizeButtonContainer"></span></div>
+        <div class="t-Region-refreshButton">
+            <button class="t-Button t-Button--noLabel t-Button--icon t-Button--link" data-action="[#REGION_STATIC_ID#]refresh" onclick="void(0);" type="button" id="#REGION_STATIC_ID#-refresh" title="Refresh" aria-label="Button">
+      <span class="t-Icon fa fa-refresh" aria-hidden="true"></span>
+    </button>
+        </div>
+    </div>
+    <div class="t-Region-bodyWrap" style="border-radius: 10px;">
+        <div class="t-Region-buttons t-Region-buttons--top">
+            <div class="t-Region-buttons-left">#PREVIOUS#</div>
+            <div class="t-Region-buttons-right">#NEXT#</div>
+        </div>
+        <div class="t-Region-body">
+            #BODY#
+            #SUB_REGIONS#
+            <button style="display: none;" type="button" class="t-Button t-Button--icon t-Button--success t-Button--simple t-Button--stretch t-Button--iconLeft btn-add-row hide-initially" id="#REGION_STATIC_ID#_btn_add" data-action="[#REGION_STATIC_ID#]row-add-row">
+       <span aria-hidden="true" class="t-Icon t-Icon--left fa fa-plus-circle">
+           </span>Add Row
+           </button>
+        </div>
+        <div class="t-Region-buttons t-Region-buttons--bottom">
+            <div class="t-Region-buttons-left">#CLOSE##HELP#</div>
+            <div class="t-Region-buttons-right">#DELETE##CHANGE##CREATE#</div>
+        </div>
+    </div>
+</div>
