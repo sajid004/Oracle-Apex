@@ -1,0 +1,7 @@
+//create main region as static content and template as Tab Container with id like tab_main
+//create region as postion tab and set ids
+let tab = apex.region("tab_main").widget().aTabs("getActive").href;
+console.log(tab);
+  if (tab=='#app_reg'){
+      console.log('dfsd')
+  }
