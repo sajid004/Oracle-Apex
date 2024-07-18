@@ -1,0 +1,66 @@
+/////////////////////////////////////on page level -> Function and Global Variable Declaration
+$( window ).ready(function() {
+    countDown()
+});
+ /////////////////////////////
+function countDown() { 
+let timerValue =  apex.item('P29_TOTAL_SECTION_TIME').getValue();
+let timer2 = timerValue + ":00";
+let timer = timer2.split(':');
+//by parsing integer, I avoid all extra string processing
+let minutes = parseInt(timer[0], 10);
+let seconds = parseInt(timer[1], 10);
+
+const myInterval = setInterval( function() {
+--seconds;
+
+minutes = (seconds < 0) ? --minutes : minutes;
+
+$s('P29_TOTAL_SECTION_TIME', minutes);
+//console.log(minutes, seconds);
+seconds = (seconds < 0) ? 59 : seconds;
+seconds = (seconds < 10) ? '0' + seconds : seconds;
+//minutes = (minutes < 10) ? minutes : minutes;
+
+if (minutes < 0) { 
+clearInterval(myInterval);
+
+
+apex.server.process('CloseQuiz', { },
+{ 
+success: function(data) {
+if (data.result == 'success') {
+        apex.message.confirm('Dear participant allocated time for this quiz has been finished. To view your results go to results tab. ', function (okPressed) {
+           if (okPressed) {
+           javascript:window.open('f?p=&APP_ID.:17:&APP_SESSION.:::', '_self');
+              }  
+           else  {
+           javascript:window.open('f?p=&APP_ID.:2:&APP_SESSION.:::', '_self');
+             }
+             });
+         // apex.message.showPageSuccess( "Dear participant allocated time for this quiz has been finished." );
+        
+        } 
+else{
+
+       apex.message.alert( "Problem while closing the quiz on time expired." );   
+   }
+
+}}
+);
+
+
+
+} 
+
+else {
+ apex.item('P29_COUNT_DOWN').setValue(minutes + ':' + seconds);
+
+timer2 = minutes + ':' + seconds;
+
+    }
+} // function()
+, 1000); // setInterval
+
+} // countDown
+/////////////////////////////////////////////////////////////////
