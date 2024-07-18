@@ -1,0 +1,5 @@
+//on item => Initialization JavaScript Function
+((options) =>{
+    options.columns.TEST_DESCRIPTION.width = '20%'
+    return options;
+})
