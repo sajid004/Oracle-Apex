@@ -7,3 +7,25 @@
 
 ////auto clear lov text
     $('.clear-list').focusout((e) => $(`#PopupLov_${apex.env.APP_PAGE_ID}_${$(e.currentTarget).attr('id')}_dlg input`).val('').trigger('keydown'));
+
+////
+$(document).ready(() => {
+    apex.actions.add({
+        name: "skm-navigate",
+        // label: "SKM Navigation",
+        action: function (event, focusElement, data) {
+            let callingObjectCode = '#' + $('#pFlowId').val() + '@' + $('#pFlowStepId').val();
+            if (data?.objectCode) {
+                window.skmNavigateObj = new skmNavigate(data.objectCode, callingObjectCode, data);
+
+            }
+            else if (data?.nodeId && data?.admTypeItem) {
+                if (window.hasOwnProperty("calledPage")) window.calledPage(data);
+                let admType = data.admTypeItem ? $v(data.admTypeItem) : 'O';
+                skmNavigateTreeNode(data.nodeId, admType, callingObjectCode, data)
+            }
+        }
+    });
+    //auto clear lov text
+    $('.clear-list').focusout((e) => $(`#PopupLov_${apex.env.APP_PAGE_ID}_${$(e.currentTarget).attr('id')}_dlg input`).val('').trigger('keydown'));
+});
