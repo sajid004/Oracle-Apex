@@ -3,3 +3,7 @@
     options.columns.TEST_DESCRIPTION.width = '20%'
     return options;
 })
+
+
+////auto clear lov text
+    $('.clear-list').focusout((e) => $(`#PopupLov_${apex.env.APP_PAGE_ID}_${$(e.currentTarget).attr('id')}_dlg input`).val('').trigger('keydown'));
