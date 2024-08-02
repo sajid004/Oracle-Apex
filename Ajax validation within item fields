@@ -1,0 +1,42 @@
+//call on save button
+validateTopic()
+//define function
+function showError(pData, pItem) {
+    apex.item(pItem).setFocus();
+    apex.message.clearErrors();
+    apex.message.showErrors([{
+            type: "error",
+            location: "inline",
+            pageItem: pItem,
+            message: pData,
+            unsafe: false
+        },
+        {
+            type: "error",
+            location: "inline",
+            message: "An error has occurred.",
+            unsafe: false
+        }
+    ]);
+}
+
+function validateTopic(e) {
+    // this.browserevent.stopPropagation()
+   // e.preventDefault();
+    //e.stopPropagation();
+    if ($v("P81_DESCRIPTION").length === 0 ) {
+        showError("Please enter title.", 'P81_DESCRIPTION');
+         apex.da.cancel();
+    } else if ($v("P81_DEPARTMENT_ID").length === 0) {
+        showError("Please select category.", 'P81_DEPARTMENT_ID');
+        apex.da.cancel();
+        // apex.da.cancelEvent.call(this);
+        } 
+        // else if ($v("P10_DEPARTMENT_ID").length === 0) {
+        // showError("Please select Department.", 'P10_DEPARTMENT_ID')
+        // apex.da.cancelEvent.call(this);
+        // } 
+    else {
+        apex.message.clearErrors();
+    }
+}
