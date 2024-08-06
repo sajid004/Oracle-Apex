@@ -1,4 +1,6 @@
-//apply css classes
+//when we use column span then we should use css classes
+//go Layout section and then CSS Classes apply following classes
+//when column span 1 then set 1 number class, as it region level and item level
 1	
 col-xxs-12 col-xs-4 col-sm-3 col-md-3 col-lg-2 col-xl-2 col-xxl-1
 2	
