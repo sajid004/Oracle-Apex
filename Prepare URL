@@ -1,3 +1,12 @@
+//////////////////////using page item///////////////////////////
+declare
+l_url varchar2(2000);
+BEGIN
+        l_url := APEX_UTIL.PREPARE_URL('f?p=110:82:&APP_SESSION.::NO:110:P82_DOCUMENT_ID:' ||
+                                                 :P81_DOCUMENT_ID ,
+					 p_checksum_type => 'SESSION');
+        :P81_URL:=l_url;
+END;
 //////////////////for two items pass////////////////////////////
 //call fun from any button
 function myFunction(){
