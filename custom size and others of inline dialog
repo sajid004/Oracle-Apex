@@ -3,5 +3,10 @@ js-dialog-size1400x600
 ///create DA -> add javascript 
 $("#interaction").parent().css({"width": "96vw","left": "2%","transform": "translate(-50%, 0)"});
 ///////////////////////////////////////////////////////////////////////
-//chnage inline dialog region title on page load
+//chnage inline dialog region title on page load 
 apex.util.getTopApex().jQuery(".ui-dialog-title").html('Patient Scanned Documents || '+$v('P274_MRNO')+' || '+$v('P274_P_NAME'));
+//////////////////////////////////////////////////////////////////////////
+// remove close button on region title
+// pase on page load
+var button = parent.$('.ui-dialog-titlebar-close'); //get the button
+button.hide(); 
