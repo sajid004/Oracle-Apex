@@ -17,3 +17,7 @@ button.hide();
   var title = parent.$('.ui-dialog-titlebar');
   title.css({'background-color':'#309fdb' ,'color':'#ffff'});
 }
+////////////////////////////////////////////////////////////////////////
+//dialog open or close
+$('#LOGIN_REGION').dialog('open');
+$('#LOGIN_REGION').dialog('close');
