@@ -10,3 +10,10 @@ apex.util.getTopApex().jQuery(".ui-dialog-title").html('Patient Scanned Document
 // pase on page load
 var button = parent.$('.ui-dialog-titlebar-close'); //get the button
 button.hide(); 
+//////////////////////////////////////////////////////////////////////////
+//change color of region title bar
+// define follwoing function and then call on page load
+ function changeTitleBarColor() {
+  var title = parent.$('.ui-dialog-titlebar');
+  title.css({'background-color':'#309fdb' ,'color':'#ffff'});
+}
