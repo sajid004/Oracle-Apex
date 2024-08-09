@@ -177,3 +177,17 @@ when others then
   apex_json.write('message', sqlerrm);
   apex_json.close_object;
 END;
+/////////////////////////////////////////////////////////////Check Request with custom parameter////////////////////////////////////
+DECLARE
+l_url varchar2(2000);
+l_app number := v('APP_ID');
+l_session number := v('APP_SESSION');
+v_encoded_date_time VARCHAR2(200);
+BEGIN 
+   :P50_URL_STORE:='';
+    l_url := APEX_UTIL.PREPARE_URL(
+        p_url => 'f?p=' || 138 || ':21:'||l_session||':CONSULT:NO::P21_PATIENT_MRNO:'||:P50_PARAM_MRNO||':',
+        p_checksum_type => 'SESSION');
+ :P81_URL:=l_url;
+END; 
+////on 21 page ,after header create process for required task perform but set Server side condotion like Type Request != Value and value is (CONSULT)
