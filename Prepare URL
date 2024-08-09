@@ -7,6 +7,8 @@ BEGIN
 					 p_checksum_type => 'SESSION');
         :P81_URL:=l_url;
 END;
+//jscode
+apex.navigation.redirect($v('P81_URL'));
 //////////////////for two items pass////////////////////////////
 //call fun from any button
 function myFunction(){
@@ -190,4 +192,12 @@ BEGIN
         p_checksum_type => 'SESSION');
  :P81_URL:=l_url;
 END; 
+/////////////////
+if($v('P50_URL_STORE')!==''){
+	apex.navigation.redirect($v('P50_URL_STORE'), "Main Orde")
+	return;
+}else{
+	apex.message.alert('Kindly enter MRNO.');
+}
+///////////////////////
 ////on 21 page ,after header create process for required task perform but set Server side condotion like Type Request != Value and value is (CONSULT)
