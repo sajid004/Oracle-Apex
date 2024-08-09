@@ -4,3 +4,29 @@
 
 //In Modal dialog page create item and button for set value and go to back main page
 //create DA on button and select CloseDialog DA and ItemToReturn set value which send to main page
+
+
+//////////////////////////////Refresh Parent page region on any Modal Dialog page
+Parent Page : 
+
+Create Dynamic action >
+
+Event > Dialog Closed
+
+Selection type > Javascript Expression
+
+Condition > JavaScript Expression> window
+
+if You are working with Apex 5.1 then 
+
+Client-side Condition>JavaScript Expression> window
+
+Type> JavaScript Expression>
+
+this.browserEvent != "load" && this.data.dialogPageId == "pageno"
+
+True Action > Refresh
+
+Affected Elements > Selection Type > Region
+
+Region> Select your region
