@@ -16,3 +16,21 @@
 .right-side .apex-item-radio input+label:after,.right-side .apex-item-checkbox input+label:after{
     right: 3px;
 }
+
+//////////////////////FOR CHECKBOX ALSO///////////////////////
+.right-side .apex-item-radio input+label, .right-side .apex-item-checkbox input+label{
+    padding-right: 1.5rem;
+}
+.right-side .apex-item-radio input+label:before,.right-side .apex-item-radio input+label:after,.right-side .apex-item-checkbox input+label:before,.right-side .apex-item-checkbox input+label:after{
+    content: "";
+    display: block;
+    left: unset;
+    position: absolute;
+    top: 0;
+}
+.right-side .apex-item-radio input+label:before,.right-side .apex-item-checkbox input+label:before {
+    right: 0;
+}
+.right-side .apex-item-radio input+label:after,.right-side .apex-item-checkbox input+label:after{
+    right: 3px;
+}
