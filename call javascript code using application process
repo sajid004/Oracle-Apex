@@ -1,0 +1,14 @@
+//paste code on workspace lvele js file
+function addContigencyInfo(){
+    $('.t-Header-navBar--start').css('background-color', 'darkred');
+    let navBar = document.querySelector('.t-Header-navBar');
+    let a = navBar.querySelector('.t-Header-navBar--start');
+    a.innerHTML = '<h1 style="color:white;margin-right:515px;">Readonly</h1>';
+}
+
+//add application process like ContigencyCheck and Process Point onPage Load Before Body Region
+//in Code section paste foloowing
+apex_javascript.add_onload_code (
+    p_code => '$(document).ready(()=>addContigencyInfo());' );
+//on Coditions Section pase code
+:GV_READ_ONLY!='Y'
