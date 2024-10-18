@@ -12,3 +12,7 @@ apex_javascript.add_onload_code (
     p_code => '$(document).ready(()=>addContigencyInfo());' );
 //on Coditions Section pase code
 :GV_READ_ONLY!='Y'
+
+////////////////////////////////////
+apex_javascript.add_onload_code (
+    p_code => '$(".a-Toolbar button").remove();');
