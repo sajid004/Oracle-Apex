@@ -40,3 +40,74 @@ function validateTopic(e) {
         apex.message.clearErrors();
     }
 }
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////show loader in ajax call
+apex.server.process('saveCloneTestProcess',
+{    
+    pageItems : [
+        'P2_CHOOSE_SCHEDULE',
+        'P2_SCHEDULE_ID_D',
+        'P2_TEST_ID_D',
+    ]
+    },
+    {
+        dataType: 'text',
+           beforeSend: function() {
+        var lSpinner$ = apex.util.showSpinner(); ///displays processing spinners
+        },
+        success: function(data)  {
+         $(".u-Processing").hide();
+          var obj = JSON.parse(data);
+      
+        if(obj.status == "success"){
+        apex.region('emp_region').refresh()
+        apex.theme.closeRegion('ChooseSchedule')
+        apex.message.alert(obj.message);
+      }
+      else{
+          apex.message.alert(obj.message);
+          }
+    }
+});
+////////////////////////////////////////////////wait popup using in any js code
+function Page_Navigation(application, page){
+    
+var popup = apex.widget.waitPopup();
+setTimeout(function (){
+    $('.u-Processing span').remove();
+    $('.u-Processing').css('background-color','white');
+    $('.u-Processing').append('<img class="apex-logo-img" src="#APP_FILES#skmlogo.png" alt="" height="100%" width="100%" style="animation: rotation 3s infinite linear;">');
+    },10)
+
+
+
+
+       vUrl = apex.util.makeApplicationUrl({
+       appId: application,                   // default is $v("pFlowId") - current app
+       pageId:page,                     // default is $v("pFlowStepId") - current page
+       session: $v( "pInstance"),   // default is $v("pInstance") - current session
+       //request: 'TEST_REQUEST',      // default is $v("pRequest") - current request
+       //debug: 'YES',                 // default is $v("pdebug") - debug YES/NO
+	 // itemNames:['P9999_VIEWSCREEN_FLAG'],        // item names array (no value by default)
+    //   itemValues:['HSC'],      // item values array (no value by default)
+       //printerFriendly: 'YES'        // no value by default
+});
+ apex.navigation.redirect(vUrl);
+ //window.location.href =vUrl;
+}
+
+
+
+function goLink(){
+window.location.href = "https://shaukatkhanum.org.pk/contact-us/";
+}
+
+function goSymposiumLink(){
+    window.open("https://shaukatkhanum.org.pk/symposium2024/", "_blank");
+// window.location.href = "https://shaukatkhanum.org.pk/symposium2024/";
+}
+
+
+function sameAppPageNav(){
+    apex.navigation.redirect("f?p=&APP_ID.:8:&APP_SESSION.::NO:RP::");
+}
