@@ -2,3 +2,11 @@
 $x('myregtitle').innerHTML =$x('P7_DNAME').value;
 
 <i id="myregtitle"></i>
+
+
+////////////////////////////////////on dynamic value for modal dialog//////////
+///////////////////on page load DA
+ apex.util.getTopApex().jQuery(".no-close_pa .ui-dialog-title").html('Feedback Instructions');
+
+///////add css class on page level-> Dialog -> CSS Classes
+no-close_pa
