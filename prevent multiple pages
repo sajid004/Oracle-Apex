@@ -1,0 +1,24 @@
+// on 0 page load DA code
+begin
+  :P0_PAGE_STATUS_ID := 'N';
+if apex_page.get_page_mode(:APP_ID, :APP_PAGE_ID) != 'NORMAL' then
+  :P0_PAGE_STATUS_ID := 'Y'; 
+ else
+  :P0_PAGE_STATUS_ID := 'N';
+ end if;
+
+end;
+///////////////////
+    const channel = new BroadcastChannel('tab');
+    channel.postMessage('another-tab');
+    // note that listener is added after posting the message
+
+    channel.addEventListener('message', (msg) => {
+       // console.log('sajid/////////::: '+msg.source)
+        if (msg.data === 'another-tab') {
+            // message received from 2nd tab
+            alert('Cannot open multiple tabs');
+            javascript:window.open('f?p=&APP_ID.:1:&APP_SESSION.:::', '_self');
+        // javascript:window.open('f?p=&APP_ID.:1:::::', '_self');
+        }
+    });
