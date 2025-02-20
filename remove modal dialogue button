@@ -1,3 +1,14 @@
 //Also, into page's Javascript, Function and global variable declaration, put
 var button = parent.$('.ui-dialog-titlebar-close'); //get the button
 button.hide(); //hide the button
+
+//change color of title of modal dialog and following code in page load
+$(document).ready(function() {
+   // setTimeout(function() {
+        var titleElement = parent.$(".ui-dialog-title");
+        
+        if (titleElement.text().trim() === "Financial") {
+            titleElement.css("color", "#007BFF");
+        }
+    //}, 300); 
+});
