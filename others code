@@ -1,0 +1,29 @@
+var myGrid = apex.region("fra").widget().interactiveGrid("getViews").grid;
+myGrid.model.fetchRecords(myGrid.getSelectedRecords());
+
+74,67,64 105 app
+
+if ($("#selectAllDay").is(':checked') ){ $('input[type=checkbox][name=f01]').attr('checked',true); }
+else{ $('input[type=checkbox][name=f01]').attr('checked',false);
+ }
+
+var tab_id = ((apex.region("tabs").widget().aTabs("getActive").href));
+
+apex.region("ig_detail").widget().interactiveGrid("getViews","grid").model.clearData();
+
+<button type="button" class="btn_invoice t-Button t-Button--noLabel t-Button--icon t-Button--link" data-order-type-id="#ORDER_TYPE_ID#" data-order-no="#ORDER_NO#" data-location-id="#LOCATION_ID#" data-order-location-id="#ORDER_LOCATION_ID#" data-store-id="#STORE_ID#" data-store-name="#STORE_NAME#" data-row-flag="#INVOICE_STATUS#"><span aria-hidden="true" class="t-Icon fa fa-2x fa-edit"></span></button>
+var btn = $(this.triggeringElement);
+clearOrderMaster();
+var orderTypeId = btn.data('orderTypeId');
+var orderNo = btn.data('orderNo');
+var locationId = btn.data('locationId');
+var orderLocationId = btn.data('orderLocationId');
+var storeId = btn.data('storeId');
+var storeName = btn.data('storeName');
+if(!orderTypeId || !orderNo || !locationId || !orderLocationId || !storeId ){
+    apex.message.alert("Incomplete parameter kindly contact MIS");
+    return;
+}
+
+var view$ = apex.region("ig_detail").widget().interactiveGrid("getViews").grid.view$;
+view$.grid("gotoCell", view$.grid("getActiveRecordId"), "QTY_ISSUED");
