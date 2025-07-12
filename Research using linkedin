@@ -1,0 +1,829 @@
+***********************Get APEX Globel items
+select upper(a.item_name) item_name,
+       APEX_UTIL.FETCH_APP_ITEM(a.item_name) item_value,
+       sys_context('GLOBAL_CONTEXT', REPLACE(upper(a.item_name), 'GV_', '')) CONTEXT_VALUE
+  from apex_application_items a
+ where application_id = 100;
+*************************************************************************************************
+**********************************Generate Excel Invoice custom format***************************
+//upload Exceljs and add line in js url on page level
+#APP_FILES#exceljs.min.js
+//create button with DA
+ createInvoiceTemplate().catch(err => {
+     console.error('Error creating invoice template:', err);
+ });
+///////////////////////////JS CODE//////////////////
+// ========== DATA OBJECT ==========
+const invoiceData = {
+  company: {
+    name: 'Your Company',
+    address: {
+      street: '[Street Address]',
+      cityStateZip: '[City, ST  ZIP]',
+    },
+    contact: {
+      phone: 'Phone: [000-000-0000]',
+      fax: 'Fax: [000-000-0000]',
+      website: 'Website: somedomain.com'
+    },
+    logo: {
+      base64: 'iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAACHElEQVR4nO2ZMUscQRiGHxM1EC3sTBGJIViIqGAXT/0B5oIJ+gcsYi8SLFQsFP9DuvT+BjVWIQp2SRVBIqgBNXBnI1FHxnyL47J7Nyt6+0nmhY+de2dm93uYnZndWwgKCrqt3gJrwAlgco4TYBUoZoVYUpC8SYnFLCNhlEfRB2RNQaKmSqz4gJQVJGqqRMkHpJYJ9QMDHp5JCFUgSdeMFEAi1eJ2yqIBrbdWISPIoFaQMEcII0KY7CZM9muFDTGP5beQsE8UKuwdaveRu9iDUpV3giaAxPTfjMgpsCfHBwnyCxgFGqRdIzAG7Hpc9MM9jHhVJXU6BNql3oI8c4BeAscVLrjscf6agUw5LzkH4u0Dr8X/mNJvB2jRBNIpdd9i/lfxuxL6/HVeot5rAWmUujPgCNgCfkuy08BcQp9Z6dMmfVSARHoH1EnZHodTJrv9k++xxHrsHCpArJqBPqDp6te/ReDQaWvLz6VuPuEcKkCGgD/iHcvDndWk03ZEvEG5FVWC/Ij538V/Ib8vnLYzwCcnItnyl7xA6oFHwHnMPxf/SQJIJY3nBfJK6jZj/ob4HQ7IREpEsuXPeYHMSF0PsC3eT6Bb/LkMF851jpScpO2S2ipHq17Pz3MqQIysUvbh76m0a5LbJFrF1IGUH8BjfMkHZDXHBM1dfnorKkjUVIk3eGpRQbImJRZ8IdyRWVHycbQsuXiPRFBQEDd0CbBu79y1BXQoAAAAAElFTkSuQmCC',//$v('P2_IMAGE'), // Replace with your image path
+      extension: 'png'
+    }
+  },
+  invoice: {
+    title: 'INVOICE',
+    details: {
+      date: { formula: 'TODAY()', format: 'mm/dd/yyyy' },
+      number: '[123456]',
+      customerId: '[123]',
+      dueDate: { formula: 'F3+30', format: 'mm/dd/yyyy' }
+    },
+    billTo: {
+      title: 'BILL TO',
+      fields: ['Name', 'Company Name', 'Street Address', 'City, ST  ZIP', 'Phone']
+    },
+    items: {
+      headers: {
+        description: 'DESCRIPTION',
+        taxed: 'TAXED',
+        amount: 'AMOUNT'
+      },
+      data: [
+        { description: '[Service Fee]', amount: 230, taxed: false },
+        { description: '[Labor: 5 hours at $75/hr]', amount: 375, taxed: false },
+        { description: '[Parts]', amount: 345, taxed: true }
+      ]
+    },
+    calculations: {
+      subtotal: { formula: 'SUM(F17:F32)' },
+      tax: [
+        { label: 'Taxable', formula: 'SUMIF(E17:E32,"=x",F17:F32)' },
+        { label: 'Tax rate', value: 0.0625, format: '0.00%' },
+        { label: 'Tax due', formula: 'ROUND(F34*F35,2)' },
+        { label: 'Other', value: 0 }
+      ],
+      total: { formula: 'F33+F36+F37' }
+    },
+    comments: {
+      title: 'OTHER COMMENTS',
+      items: [
+        '1. Total payment due in 30 days',
+        '2. Please include the invoice number on your check'
+      ]
+    },
+    paymentInstructions: {
+      line1: 'Make all checks payable to',
+      line2: '[Your Company Name]'
+    },
+    footer: [
+      'If you have any questions about this invoice, please contact',
+      '[Name, Phone #, E-mail]',
+      'Thank You For Your Business!'
+    ]
+  }
+};
+
+// ========== TEMPLATE GENERATION ==========
+async function createInvoiceTemplate() {
+    // Create a new workbook with metadata
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = invoiceData.company.name;
+    workbook.lastModifiedBy = 'Invoice System';
+    workbook.created = new Date();
+    workbook.modified = new Date();
+
+    const worksheet = workbook.addWorksheet('Invoice', {
+        views: [{ showGridLines: false }] // Cleaner look without gridlines
+    });
+
+    // ========== STYLE DEFINITIONS ==========
+    const styles = {
+        header: {
+            font: { bold: true, size: 28, color: { argb: '3B4E87' } },
+            alignment: { horizontal: 'center', vertical: 'middle' }
+        },
+        sectionHeader: {
+            font: { bold: true, size: 12, color: { argb: 'FFFFFF' } },
+            fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: '3B4E87' } },
+            border: createBorder('FFFFFF')
+        },
+        label: {
+            font: { bold: true, color: { argb: '000000' } },
+            alignment: { horizontal: 'right' },
+            border: createBorder('FFFFFF')
+        },
+        amount: {
+            numFmt: '$#,##0.00',
+            alignment: { horizontal: 'right' },
+            border: createBorder('FFFFFF')
+        },
+        total: {
+            font: { bold: true },
+            border: {
+                bottom: { style: 'thin', color: { argb: 'FFFFFF' } },
+                top: { style: 'double', color: { argb: '000000' } },
+                left: { style: 'thin', color: { argb: 'FFFFFF' } },
+                right: { style: 'thin', color: { argb: 'FFFFFF' } }
+            },
+            numFmt: '$#,##0.00',
+            alignment: { horizontal: 'right' }
+        },
+        footer: {
+            font: { italic: true, color: { argb: '555555' } },
+            alignment: { horizontal: 'center' },
+            border: createBorder('FFFFFF')
+        },
+        itemRow: (isGray) => ({
+            fill: {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: isGray ? 'F0F0F0' : 'FFFFFF' }
+            },
+            border: createBorder('D3D3D3')
+        })
+    };
+
+    // ========== WORKSHEET CONFIGURATION ==========
+    // Set column widths
+    worksheet.columns = [
+        { width: 30 },  // A: Description
+        { width: 10 },  // B
+        { width: 10 },  // C
+        { width: 10 },  // D
+        { width: 15 },  // E: Taxed
+        { width: 15 }   // F: Amount
+    ];
+
+    // Set row heights
+    worksheet.getRow(1).height = 50;
+    worksheet.getRow(15).height = 22; // Header row for items
+    worksheet.getRow(33).height = 22; // Subtotal row
+    worksheet.getRow(38).height = 22; // Total row
+
+    // ========== INVOICE HEADER ==========
+    // Add company logo
+    try {
+        const imageId = workbook.addImage({
+            base64: invoiceData.company.logo.base64,
+            extension: invoiceData.company.logo.extension,
+        });
+
+        worksheet.addImage(imageId, {
+            tl: { col: 0, row: 0 },
+            br: { col: 1, row: 1 },
+            editAs: 'oneCell'
+        });
+    } catch (error) {
+        console.error('Error adding image:', error);
+    }
+
+    // Add invoice title
+    worksheet.mergeCells('E1:F1');
+    const invoiceHeader = worksheet.getCell('E1');
+    invoiceHeader.value = invoiceData.invoice.title;
+    invoiceHeader.style = styles.header;
+
+    // ========== COMPANY INFORMATION ==========
+    const companyInfo = [
+        invoiceData.company.address.street,
+        invoiceData.company.address.cityStateZip,
+        invoiceData.company.contact.phone,
+        invoiceData.company.contact.fax,
+        invoiceData.company.contact.website
+    ];
+
+    companyInfo.forEach((info, index) => {
+        worksheet.getCell(`A${index + 2}`).value = info;
+    });
+
+    // ========== INVOICE DETAILS ==========
+    const invoiceDetails = [
+        { label: 'DATE', value: invoiceData.invoice.details.date },
+        { label: 'INVOICE #', value: invoiceData.invoice.details.number },
+        { label: 'CUSTOMER ID', value: invoiceData.invoice.details.customerId },
+        { label: 'DUE DATE', value: invoiceData.invoice.details.dueDate }
+    ];
+
+    invoiceDetails.forEach((detail, index) => {
+        const row = index + 3;
+        worksheet.getCell(`E${row}`).value = detail.label;
+        worksheet.getCell(`E${row}`).style = styles.label;
+
+        const valueCell = worksheet.getCell(`F${row}`);
+        valueCell.value = detail.value;
+        if (detail.value.format) valueCell.numFmt = detail.value.format;
+        valueCell.style = styles.amount;
+    });
+
+    // ========== BILL TO SECTION ==========
+    worksheet.getCell('A8').value = invoiceData.invoice.billTo.title;
+    worksheet.getCell('A8').style = styles.sectionHeader;
+
+    invoiceData.invoice.billTo.fields.forEach((field, index) => {
+        worksheet.getCell(`A${index + 9}`).value = `[${field}]`;
+    });
+
+    // ========== ITEM TABLE ==========
+    // Header
+    worksheet.mergeCells('A15:D15');
+    worksheet.getCell('A15').value = invoiceData.invoice.items.headers.description;
+    worksheet.getCell('A15').style = styles.sectionHeader;
+
+    worksheet.getCell('E15').value = invoiceData.invoice.items.headers.taxed;
+    worksheet.getCell('E15').style = styles.sectionHeader;
+
+    worksheet.getCell('F15').value = invoiceData.invoice.items.headers.amount;
+    worksheet.getCell('F15').style = { ...styles.sectionHeader, alignment: { horizontal: 'right' } };
+
+    // Items
+    invoiceData.invoice.items.data.forEach((item, index) => {
+        const row = 17 + index;
+        worksheet.getCell(`A${row}`).value = item.description;
+        if (item.taxed) worksheet.getCell(`E${row}`).value = 'X';
+        worksheet.getCell(`F${row}`).value = item.amount;
+        worksheet.getCell(`F${row}`).style = styles.amount;
+    });
+
+    // Apply alternating row colors
+    for (let row = 17; row <= 42; row++) {
+        const isGray = row % 2 === 1;
+        for (let col = 1; col <= 6; col++) {
+            const cell = worksheet.getCell(row, col);
+            cell.style = { 
+                ...cell.style, 
+                ...styles.itemRow(isGray) 
+            };
+        }
+    }
+
+    // ========== CALCULATIONS ==========
+    // Subtotal
+    worksheet.getCell('E33').value = 'Subtotal';
+    worksheet.getCell('E33').style = styles.label;
+    worksheet.getCell('F33').value = { formula: invoiceData.invoice.calculations.subtotal.formula };
+    worksheet.getCell('F33').style = styles.amount;
+
+    // Tax calculations
+    invoiceData.invoice.calculations.tax.forEach((row, index) => {
+        const rowNum = 34 + index;
+        worksheet.getCell(`E${rowNum}`).value = row.label;
+        worksheet.getCell(`E${rowNum}`).style = styles.label;
+
+        const valueCell = worksheet.getCell(`F${rowNum}`);
+        if (row.formula) {
+            valueCell.value = { formula: row.formula };
+        } else {
+            valueCell.value = row.value;
+        }
+        if (row.format) valueCell.numFmt = row.format;
+        valueCell.style = styles.amount;
+    });
+
+    // Total
+    worksheet.getCell('E38').value = 'TOTAL';
+    worksheet.getCell('E38').style = styles.total;
+    worksheet.getCell('F38').value = { formula: invoiceData.invoice.calculations.total.formula };
+    worksheet.getCell('F38').style = styles.total;
+
+    // ========== COMMENTS & FOOTER ==========
+    worksheet.getCell('A40').value = invoiceData.invoice.comments.title;
+    worksheet.getCell('A40').style = styles.sectionHeader;
+
+    invoiceData.invoice.comments.items.forEach((comment, index) => {
+        worksheet.getCell(`A${41 + index}`).value = comment;
+    });
+
+    // Payment instructions
+    worksheet.mergeCells('E43:F43');
+    worksheet.getCell('E43').value = invoiceData.invoice.paymentInstructions.line1;
+    worksheet.getCell('E43').style = styles.label;
+
+    worksheet.mergeCells('E44:F44');
+    worksheet.getCell('E44').value = invoiceData.invoice.paymentInstructions.line2;
+    worksheet.getCell('E44').style = {
+        font: { bold: true, size: 12 },
+        alignment: { horizontal: 'right' }
+    };
+
+    // Footer
+    invoiceData.invoice.footer.forEach((line, index) => {
+        const row = 46 + index;
+        worksheet.mergeCells(`A${row}:F${row}`);
+        const cell = worksheet.getCell(`A${row}`);
+        cell.value = line;
+
+        if (index < 2) {
+            cell.style = styles.footer;
+        } else {
+            cell.style = {
+                font: { bold: true, size: 14, color: { argb: '333333' } },
+                alignment: { horizontal: 'center' }
+            };
+        }
+    });
+
+    // Save the workbook
+    await downloadWorkbook(workbook);
+    console.log('Invoice template created successfully!');
+}
+
+async function downloadWorkbook(workbook) {
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    });
+
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `Invoice_${invoiceData.invoice.details.number || new Date().toISOString().slice(0, 10)}.xlsx`;
+    link.click();
+
+    // Clean up
+    setTimeout(() => URL.revokeObjectURL(link.href), 100);
+}
+
+// Helper function to create consistent borders
+function createBorder(color) {
+    return {
+        top: { style: 'thin', color: { argb: color } },
+        left: { style: 'thin', color: { argb: color } },
+        bottom: { style: 'thin', color: { argb: color } },
+        right: { style: 'thin', color: { argb: color } }
+    };
+}
+********************************************************************************
+***************************************Export Report using custom format********
+//create static LOV with format Excel(XLSX), PDF
+//create report with static id
+//create name export button with submit state
+//create process on submit and pase follwoing code
+DECLARE
+    l_export       apex_data_export.t_export;
+    l_region_id    NUMBER;
+    l_format       VARCHAR2(255) := UPPER(:P2_LOV);  -- e.g., 'PDF', 'CSV', 'XLSX', etc.
+    l_format_const apex_data_export.t_format;
+BEGIN
+    -- Map user input to APEX constants
+    l_format_const := 
+        CASE l_format
+            WHEN 'PDF'  THEN apex_data_export.c_format_pdf
+            WHEN 'CSV'  THEN apex_data_export.c_format_csv
+            WHEN 'HTML' THEN apex_data_export.c_format_html
+            WHEN 'XLSX' THEN apex_data_export.c_format_xlsx
+            ELSE apex_data_export.c_format_csv  -- fallback
+        END;
+
+    -- Get the region ID of the Classic Report
+    SELECT region_id INTO l_region_id
+    FROM apex_application_page_regions
+    WHERE application_id = :APP_ID
+      AND page_id = :APP_PAGE_ID
+      AND static_id = 'classic_report';
+
+    -- Export the data using selected format
+    l_export := apex_region.export_data (
+        p_format       => l_format_const,
+        p_page_id      => :APP_PAGE_ID,
+        p_region_id    => l_region_id
+    );
+
+    -- Trigger the download
+    apex_data_export.download(l_export);
+END; 
+*********************************************************************************************
+************************Save Image in Collection and Display Image in GRID*******************
+//create grid with id (displayImage) and using folloing query
+SELECT C001 as name,
+'<img hegiht="150px" width="150px" src="'||clob001||'"/>' as img
+FROM APEX_COLLECTIONS WHERE COLLECTION_NAME = 'IMAGE_DISPLAY';
+//create file browse item for uplaod file and one item with name item of file
+//create button for save in collection with DA following code
+let input = document.querySelector('#P4_FILE')
+displayImageAtRuntime2Grid(input)
+//////////////////call function
+function displayImageAtRuntime2Grid(input) {
+    if (input.files && input.files[0] && input.files[0].type.match('image.*')) {
+      //  setTimeout(function() { // Defer processing to avoid blocking
+            var reader = new FileReader();
+            
+            reader.onload = function(e) {
+                var src = e.target.result;
+                apex.server.process("STORE_IMAGE_2_COLLECTION", {
+                    x01: apex.item('P4_NAME').getValue(),
+                    p_clob_01: src,
+                    
+                }, 
+                { 
+                    dataType: 'text',
+                    success: function(pData) {
+                        apex.region('displayImage').refresh();
+                    },
+                    error: function(err) {
+                        alert("Error: " + err.statusText);
+                    }
+                });
+            };
+
+            reader.readAsDataURL(input.files[0]);
+      //  }, 0);
+    } else {
+        alert("Please select a valid image file.");
+    }
+}
+///////////////////////Call AJAX process
+DECLARE
+    l_blob  BLOB;
+BEGIN
+    l_blob := apex_web_service.clobbase642blob(
+        p_clob  => apex_application.g_clob_01
+    );
+   
+    apex_collection.add_member(
+        p_collection_name   => 'IMAGE_DISPLAY'
+        , p_c001            => apex_application.g_x01
+        , p_clob001         => apex_application.g_clob_01
+        , p_blob001         => l_blob
+    );
+END;
+*************************************************************************
+************************Async call or DA call using DA//
+//asyc call work for set value or secver side code
+(async ()={
+   // simple statement
+//ajax call
+// simple statement
+})();
+apex.event.trigger('#P5_SET_VALUE', 'change');
+***************************************************************************
+**************************select all or remove all i LOV
+SELECT 'Select All' AS D, TO_CHAR(-1) AS department_id FROM DUAL
+UNION ALL
+SELECT 'Remove All' AS D, TO_CHAR(-2) AS department_id FROM DUAL
+UNION ALL
+SELECT DEPARTMENT_NAME AS D, DEPARTMENT_NAME FROM hr.departments;
+//create DA and set condtiton if value -1 then set Value using folllowing
+SELECT LISTAGG(DEPARTMENT_NAME, ':') 
+ FROM hr.departments;
+//set condtiton if other value in case just refresh LOV
+*****************************************************************************
+****************************Direct Print Code
+//dynamic content code
+declare
+l_lob clob;
+l_app  number :=:APP_ID;
+l_session number :=apex_application.g_instance;
+l_url  varchar2(3000);
+begin
+l_url := 'f?p'||l_app||':0:'||l_session||':PRINT_REPORT=Text_1';
+l_lob :='<embed type="application/pdf" src="'||l_url||'" width="100%" height="500px"/>';
+return l_lob;
+end;
+////////////on press button on DA
+printPDF()
+//function code
+function printPDF(){
+    var iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.type = "application/pdf";
+    iframe.id = 'pdf';
+    iframe.src = "f?p=&APP_ID.:8:&SESSION.:PRINT_REPORT=Text_1";
+    document.body.appendChild(iframe);
+
+    var rpt = document.getElementById('pdf');
+    rpt.onload = function(){
+        setTimeout(
+        ()=>{
+            try{
+              rpt.contentWindow.print();
+            }
+            catch{
+                        console.log('eeeeeeeeeeeeeeeeeeeeeeeeeeeee')
+            }
+        }
+        ,1000)
+    }
+}
+*******************************************************************************
+******************************open dialog on grid detail
+////////////////////////////////////////////////GRID this code paste on function declaration in page level
+$(function() { $("#add_users").on("interactivegridviewchange", function(event, data) { 
+    if (data.view === "grid" && data.created) { var view$ = apex.region("add_users").call("getViews", "grid"); if (view$.rowActionMenu$) 
+    { var menu$ = view$.rowActionMenu$.menu("option").items; for (var i = 0; i < menu$.length; i++) 
+    { if (menu$[i].action === 'row-duplicate') { menu$.splice(i + 1, 0, { type: "action", label: "Emp Detail", icon: "fa fa-user", action: function(menu, element) 
+    { var record = view$.getContextRecord(element)[0]; var empno = view$.model.getValue(record, "EMPLOYEE_ID").trim(); apex.item('P4_USRID').setValue(empno); 
+// console.log('url', url); 
+// Modal Dialog Open Code 
+apex.navigation.dialog( "f?p=&APP_ID.:8:&SESSION.::NO::", { title: "Employee Detail", height: "600", width: "800", modal: true } ); } }); break; } } } } });
+ });
+*******************************************************************************************************
+**************************Edit Safe Smart Form Alerts: Highlight Changes & Confirm Before Save!****
+// Steps to Implement:
+
+// STEP 1: Set Form Static ID
+Give your form region a Static ID
+ 📌 Example: FORM
+
+// STEP 2: Track Original Values on Page Load
+// Dynamic Action
+Event: Page Load
+Action: Execute JavaScript Code
+
+document.querySelectorAll('input[id^="P"], select[id^="P"], textarea[id^="P"]').forEach(el => {
+ el.setAttribute('data-original-value', el.value);
+});
+
+// STEP 3: Highlight Changed Fields
+// Dynamic Action
+Event: Change
+Selection Type: jQuery Selector
+jQuery Selector:
+
+input[id^="P"], select[id^="P"], textarea[id^="P"]
+
+True Action → JavaScript Code:
+
+
+const item = this.triggeringElement;
+const originalValue = item.getAttribute('data-original-value') || '';
+const currentValue = item.value || '';
+
+if (originalValue !== currentValue) {
+ item.style.outline = '2px solid orange';
+} else {
+ item.style.outline = '';
+}
+
+// Result: Fields will be outlined in orange when user changes any value.
+
+// STEP 4: Show All Changes Before Save
+// Dynamic Action
+Event: Click
+Selection Type: Button
+Button: SAVE (or your actual button name)
+True Action → JavaScript Code:
+
+const changedFields = [];
+
+document.querySelectorAll('input[id^="P"], select[id^="P"], textarea[id^="P"]').forEach(el => {
+ const itemId = el.id;
+ const item = apex.item(itemId);
+
+ if (item) {
+ const oldVal = el.getAttribute('data-original-value') || '';
+ const newVal = item.getValue() || '';
+
+ if (oldVal !== newVal) {
+ const label = document.querySelector(`label[for="${itemId}"]`);
+ const fieldName = label ? label.innerText.trim() : itemId;
+ changedFields.push(`${fieldName}: "${oldVal}" ➝ "${newVal}"`);
+ }
+ }
+});
+
+if (changedFields.length > 0) {
+ const msg = "📝 You have changed the following fields:\n\n" + 
+ changedFields.join('\n') + 
+ "\n\nDo you want to proceed?";
+ if (confirm(msg)) {
+ apex.submit('SAVE'); // Replace 'SAVE' with your process name if different
+ }
+} else {
+ apex.submit('SAVE');
+}
+*****************************************************************************************************
+************************************Prevent Users from Opening Multiple Tabs in Oracle APEX 
+1/////Create a Static Content Region :
+
+<div id="singleTabModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center;">
+ <div id="singleTabModalContent" style="background:#fff; padding:20px; max-width:400px; text-align:center; border-radius: 8px;">
+ <h2>This page is already open in another tab.</h2>
+ <p>Please use the existing tab.</p>
+ <button onclick​="window.close()" style="padding:10px 20px; cursor:pointer;">Close Tab</button>
+ </div>
+</div>
+
+2////Function and Global Variable Declaration:
+
+const storageKey = "single-tab-lock-heartbeat";
+const heartbeatInterval = 3000; // 3 seconds heartbeat update interval
+const heartbeatTimeout = 7000; // 7 seconds timeout to consider a tab dead
+const tabId = `${Date.now()}-${Math.random()}`;
+
+function showModal() {
+ const modal = document.getElementById("singleTabModal");
+ if (modal) modal.style.display = "flex";
+}
+
+function getHeartbeats() {
+ try {
+ return JSON.parse(localStorage.getItem(storageKey)) || {};
+ } catch {
+ localStorage.removeItem(storageKey);
+ return {};
+ }
+}
+
+function setHeartbeats(hb) {
+ localStorage.setItem(storageKey, JSON.stringify(hb));
+}
+
+function cleanExpiredHeartbeats(hb) {
+ const now = Date.now();
+ let changed = false;
+ for (const id in hb) {
+ if ((now - hb[id]) > heartbeatTimeout) {
+ delete hb[id];
+ changed = true;
+ }
+ }
+ if (changed) {
+ setHeartbeats(hb);
+ }
+ return hb;
+}
+
+function isAnotherTabActive(hb) {
+ const now = Date.now();
+ return Object.keys(hb).some(id => id !== tabId && (now - hb[id]) <= heartbeatTimeout);
+}
+
+function heartbeat() {
+ const hb = getHeartbeats();
+ hb[tabId] = Date.now();
+ cleanExpiredHeartbeats(hb);
+ setHeartbeats(hb);
+}
+
+window.addEventListener("load", () => {
+ let hb = getHeartbeats();
+ hb = cleanExpiredHeartbeats(hb);
+
+ if (isAnotherTabActive(hb)) {
+ showModal();
+ return;
+ }
+
+ heartbeat(); // immediate heartbeat on load
+
+ const intervalId = setInterval(heartbeat, heartbeatInterval);
+
+ window.addEventListener("beforeunload", () => {
+ const hb = getHeartbeats();
+ if (hb[tabId]) {
+ delete hb[tabId];
+ setHeartbeats(hb);
+ }
+ clearInterval(intervalId);
+ });
+
+ window.addEventListener("storage", (event) => {
+ if (event.key === storageKey) {
+ const hb = cleanExpiredHeartbeats(getHeartbeats());
+ if (isAnotherTabActive(hb)) {
+ showModal();
+ }
+ }
+ });
+});
+***************************************************************************************
+***********************************Select & Copy Rows in Oracle APEX IR with Checkboxes!
+/// Steps to Implement:
+1️///Modify the Interactive Report SQL Source
+ Add a custom column for checkboxes:
+
+SELECT employee.*, NULL AS copy_col
+FROM employee;
+
+2️///Configure Column Formatting
+ Go to ➡️ Column Attributes → copy_col → HTML Expression, and paste:
+
+<input type="checkbox" class="copy-checkbox">
+
+3️////Create a Button
+ Add a button to your page — e.g., Copy Selected Rows.
+
+4️////Dynamic Action Setup
+Event: Click
+Selection Type: Button
+Button: Select the one created
+
+5️/////True Action → Execute JavaScript Code
+ ////Paste the following script as-is (no changes required):
+
+function pad(str, len) {
+ str = str || "";
+ return str.toString().padEnd(len, " ");
+}
+
+const checkedBoxes = document.querySelectorAll("#IG input.copy-checkbox:checked");
+
+if (checkedBoxes.length === 0) {
+ apex.message.alert("Please select at least one row.");
+ return;
+}
+
+let selectedRows = [];
+
+let allHeaders = Array.from(document.querySelectorAll("#IG a.a-IRR-headerLink"));
+let headerLabels = allHeaders
+ .slice(0, allHeaders.length / 2)
+ .map(el => el.textContent.trim());
+
+const copyColIndex = headerLabels.findIndex(h => h.toLowerCase() === "copy");
+
+if (copyColIndex !== -1) {
+ headerLabels.splice(copyColIndex, 1);
+}
+
+const headerLine = headerLabels.map(h => pad(h, 20)).join("");
+
+checkedBoxes.forEach(cb => {
+ const row = cb.closest("tr");
+ const tds = Array.from(row.querySelectorAll("td"));
+
+ const values = tds
+ .map(td => td.textContent.trim())
+ .filter((_, idx) => idx !== copyColIndex);
+
+ const rowLine = values.map(v => pad(v, 20)).join("");
+ selectedRows.push(rowLine);
+});
+
+const combined = [headerLine, ...selectedRows].join("\n");
+
+navigator.clipboard.writeText(combined).then(() => {
+ apex.message.showPageSuccess(`✅ Copied ${selectedRows.length} rows to clipboard!`);
+}).catch(() => {
+ apex.message.alert("Failed to copy to clipboard.");
+});
+*********************************************************************************************************************************
+**********************************Disable Save Button Until All Required Fields Are Filled - Tooltip-Based Guidance in Oracle APEX
+/// Updated Steps to Implement:
+
+1️///Set “Value Required” for Each Page Item
+
+Go to each required Page Item
+Under the Validation section:
+ /// Set Value Required = Yes
+This ensures APEX understands which fields are mandatory.
+
+2️///Set Static ID for the Save Button
+Navigate to your Save button
+Set the Static ID to: BTN
+
+3️///Paste JavaScript into “Execute when Page Loads”
+Go to:
+ Page Attributes → Execute when Page Loads
+ Paste this code:
+
+
+function checkRequiredFields() {
+ const $btn = $('#BTN');
+
+ if (!$btn.parent().hasClass('tooltip-wrapper')) {
+ $btn.wrap('<div class="tooltip-wrapper" style="display:inline-block;position:relative;"></div>');
+ }
+
+ const $wrap = $btn.parent();
+
+ const requiredItems = $('input[required], textarea[required], select[required]')
+ .map(function () {
+ return {
+ id: this.id,
+ label: $('label[for="' + this.id + '"]').text().replace(':', '').trim() || this.id
+ };
+ }).get();
+
+ const missing = requiredItems.filter(f => !$v(f.id)?.trim());
+ const msg = missing.length ? 'Please fill:\n' + missing.map(f => `• ${f.label}`).join('\n') : '';
+
+ $btn.prop('disabled', !!missing.length);
+ $wrap.off('mouseenter mouseleave');
+ $('.custom-tooltip').remove();
+
+ if (missing.length) {
+ $wrap.on('mouseenter', () => {
+ $('<div class="custom-tooltip"></div>').text(msg).css({
+ position: 'fixed',
+ top: $wrap.offset().top,
+ left: $wrap.offset().left + $wrap.outerWidth() + 10,
+ background: '#333',
+ color: '#fff',
+ padding: '6px 10px',
+ borderRadius: '4px',
+ fontSize: '12px',
+ whiteSpace: 'pre-line',
+ zIndex: 1000,
+ maxWidth: '250px'
+ }).appendTo('body');
+ }).on('mouseleave', () => $('.custom-tooltip').remove());
+ }
+}
+
+// Run initially
+checkRequiredFields();
+
+// Watch for changes on any required field
+$('input[required], textarea[required], select[required]').on('input change', checkRequiredFields);
+**********************
