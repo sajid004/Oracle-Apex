@@ -1,0 +1,33 @@
+**************************************Highlight IR ROW**************************************
+//highlight row which recent updated in intractive report and forms as modal dialog(forms)
+in query add this line and add color using action menu
+case EMPLOYEE_ID when  to_number(:P13_NEW) then 'Y' else '' end flag
+//on close dialog close process return item of dialog page
+//set value and return item of dialog page adn effectd item of current page
+*******************************************************************************************
+*********************************Change Row color on click on Link Column*****************
+//add follwing line in IR query
+case  when MANAGER_ID is null then 'boldThisRow' else null end as add_class
+//add above column(add_class) in link  like following
+<span role="img" aria-label="Edit" class="fa fa-edit #ADD_CLASS#" title="Edit"></span>
+//add following code in DA After refresh report
+$('.boldThisRow').closest('tr').addClass('mycls');
+//$('window').trigger('apexwindowresized');
+//add css in inline css like
+.mycls{
+    
+    color: red;
+}
+*******************************************************************************************
+********************************Show success message on close Modal Dialog*****************
+//create two items in 0 page one is succes and other msg
+//on change on 0 page msg item DA pase following code
+apex.message.showPageSuccess(apex.item('P0_SUCCESS').getValue());
+//on Dialog page process set default success msg and then process like
+:P0_SUCCESS := apex_application.g_print_success_message;
+//on page 0 set value DA return item P0_SUCCESS and effected item msg item
+******************************************************************************************
+*******************************For Checksum and protect value
+       apex_util.get_hash(apex_t_varchar2(EMPLOYEE_ID, 'P4_FILE')) as chksmitme,
+       apex_util.get_hash(apex_t_varchar2(EMPLOYEE_ID)) as chksm,
+       FIRST_NAME,
