@@ -1,0 +1,531 @@
+******************************Image Marking ****************************************
+///create a modal dialog with height 700 and width 550
+///create region with following code
+<div style="width: fit-content;">
+ <!-- input file and button -->
+  <input type="text" id="textInput" placeholder="Enter text" style="font-size:16px;margin-left:40px;">
+  <button id="addTextBtn" type="button"> Add Text</button> 
+  <!-- <i class="fa fa-solid fa-plus"></i> -->
+  <button id="addDateBtn" type="button"><i class="fa fa-solid fa-calendar"></i> Add Date</button> 
+<!-- Image Canvas -->
+  <div style="position: relative; width: 450px; height: 250px; margin-top:10px;margin-left:40px;">
+    <canvas id="drawCanvas" width="420" height="420" style="border: 1px solid #aaa;"></canvas>
+  </div>
+<!-- All Colors -->
+  <div style="margin-top:175px; margin-left:40px;">
+    <div>
+    <button class="colorBtn" type="button" style="background-color: red;"></button>
+    <button class="colorBtn" type="button" style="background-color: pink;"></button>
+    <button class="colorBtn" type="button" style="background-color: hotpink;"></button>
+    <button class="colorBtn" type="button" style="background-color: orange;"></button>
+    <button class="colorBtn" type="button" style="background-color: yellow;"></button>
+    <button class="colorBtn" type="button" style="background-color: green;"></button>
+    <button class="colorBtn" type="button" style="background-color: lime;"></button>
+    <button class="colorBtn" type="button" style="background-color: blue;"></button>
+    <button class="colorBtn" type="button" style="background-color: purple;"></button>
+    <button class="colorBtn" type="button" style="background-color: cyan;"></button>
+    <button class="colorBtn" type="button" style="background-color: white;"></button>
+    <button class="colorBtn" type="button" style="background-color: black;"></button>
+  </div>
+
+    <button class="toolBtn" type="button" data-tool="pen"><i class="fa fa-solid fa-pencil"></i> Pen</button>
+    <button class="toolBtn" type="button" data-tool="rectangle"><i class="fa fa-solid fa-square"></i> Rectangle</button>
+    <button class="toolBtn" type="button" data-tool="circle"><i class="fa fa-solid fa-circle"></i> Circle</button>
+    <button id="clearDraw" type="button"><i class="fa fa-eraser"></i> Clear ALL</button>
+    
+      <button id="clearImageBtn" type="button"><i class="fa fa-solid fa-image"></i> Clear Image</button>
+      <button id="undoBtn" type="button"><i class="fa fa-solid fa-rotate-left"></i> Undo</button>
+      <button id="redoBtn" type="button"><i class="fa fa-solid fa-rotate-right"></i> Redo</button>
+      <button id="saveBtn" type="button" style="background-color: green; color:white;">Save Image</button>
+      <!-- <i class="fa fa-save"></i> -->
+      <!-- <button id="downloadBtn" type="button"><i class="fa fa-download"></i> Download Image</button> -->
+      <!-- <button id="exitBtn" type="button" style="color: white; background-color: #d43b3b;"><i class="fa fa-remove"></i> Exit</button> -->
+    </div>
+  </div>
+</div>
+<div>
+/////////////on page level Function and Global Variable Declaration 
+(() => {
+    const canvas = document.getElementById("drawCanvas");
+    const ctx = canvas.getContext("2d");
+    ctx.lineWidth = 2;
+    ctx.font = "20px Arial";
+
+    let currentTool = "pen", currentColor = "black";
+    let isDrawing = false, previewMode = false;
+    let startX = 0, startY = 0, draggingIndex = null;
+    let elements = [], undoStack = [], redoStack = [];
+    let loadedImage = null;
+    // let cameraStream = null;
+
+
+    // const video = document.getElementById("cameraVideo");
+    // const captureBtn = document.getElementById("captureBtn");
+    // const closeCameraBtn = document.getElementById("closeCameraBtn");
+
+
+    function pushState() {
+        undoStack.push(JSON.parse(JSON.stringify(elements)));
+        if (undoStack.length > 50) undoStack.shift();
+        redoStack = [];
+    }
+
+
+    function drawAll() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        const imageEl = elements.find(el => el.type === "image");
+        if (imageEl && loadedImage) {
+            ctx.drawImage(loadedImage, imageEl.x, imageEl.y, imageEl.width, imageEl.height);
+        }
+
+        elements.forEach(el => {
+            ctx.strokeStyle = ctx.fillStyle = el.color || "black";
+            if (el.type === "line") {
+                ctx.beginPath();
+                ctx.moveTo(el.fromX, el.fromY);
+                ctx.lineTo(el.toX, el.toY);
+                ctx.stroke();
+            } else if (el.type === "rectangle") {
+                ctx.strokeRect(el.x, el.y, el.width, el.height);
+            } else if (el.type === "circle") {
+                ctx.beginPath();
+                ctx.arc(el.x, el.y, el.radius, 0, Math.PI * 2);
+                ctx.stroke();
+            } else if (el.type === "text") {
+                ctx.fillText(el.text, el.x, el.y);
+            }
+        });
+    }
+
+    function getMouse(e) {
+        const rect = canvas.getBoundingClientRect();
+        return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    }
+
+  
+    document.querySelectorAll(".toolBtn").forEach(btn => {
+        btn.onclick = async () => {
+            currentTool = btn.getAttribute("data-tool");
+            document.querySelectorAll(".toolBtn").forEach(b => b.style.background = "");
+            btn.style.background = "#ddd";
+
+            if (currentTool === "rectangle" || currentTool === "circle") {
+                await fetchData();
+                drawAll();
+            }
+        };
+    });
+
+    document.querySelectorAll(".colorBtn").forEach(btn => {
+        btn.onclick = () => {
+            currentColor = btn.style.backgroundColor;
+        };
+    });
+
+  
+    canvas.onmousedown = e => {
+        const { x, y } = getMouse(e);
+        startX = x;
+        startY = y;
+        isDrawing = true;
+        draggingIndex = null;
+
+   
+        for (let i = elements.length - 1; i >= 0; i--) {
+            const el = elements[i];
+            if (el.type === "text") {
+                const width = ctx.measureText(el.text).width;
+                const height = 24;
+                if (x >= el.x && x <= el.x + width && y >= el.y - height && y <= el.y) {
+                    draggingIndex = i;
+                    pushState();
+                    return;
+                }
+            } else if (el.type === "rectangle") {
+                if (x >= el.x && x <= el.x + el.width && y >= el.y && y <= el.y + el.height) {
+                    draggingIndex = i;
+                    pushState();
+                    return;
+                }
+            } else if (el.type === "circle") {
+                if (Math.hypot(x - el.x, y - el.y) <= el.radius) {
+                    draggingIndex = i;
+                    pushState();
+                    return;
+                }
+            }
+        }
+
+        if (currentTool === "pen") {
+            pushState();
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+        } else if (currentTool === "rectangle" || currentTool === "circle") {
+            pushState();
+            previewMode = true;
+        }
+    };
+
+ 
+    canvas.onmousemove = e => {
+        if (!isDrawing) return;
+        const { x, y } = getMouse(e);
+
+        if (draggingIndex !== null) {
+            const el = elements[draggingIndex];
+            const dx = x - startX;
+            const dy = y - startY;
+            el.x += dx;
+            el.y += dy;
+            startX = x;
+            startY = y;
+            drawAll();
+        } else if (currentTool === "pen") {
+            ctx.lineTo(x, y);
+            ctx.strokeStyle = currentColor;
+            ctx.stroke();
+            elements.push({ type: "line", fromX: startX, fromY: startY, toX: x, toY: y, color: currentColor });
+            startX = x;
+            startY = y;
+        } else if (previewMode) {
+            drawAll();
+            ctx.strokeStyle = currentColor;
+            if (currentTool === "rectangle") {
+                ctx.strokeRect(startX, startY, x - startX, y - startY);
+            } else if (currentTool === "circle") {
+                const r = Math.hypot(x - startX, y - startY);
+                ctx.beginPath();
+                ctx.arc(startX, startY, r, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+        }
+    };
+
+
+    canvas.onmouseup = e => {
+        if (previewMode) {
+            const { x, y } = getMouse(e);
+            if (currentTool === "rectangle") {
+                elements.push({ type: "rectangle", x: startX, y: startY, width: x - startX, height: y - startY, color: currentColor });
+            } else if (currentTool === "circle") {
+                const r = Math.hypot(x - startX, y - startY);
+                elements.push({ type: "circle", x: startX, y: startY, radius: r, color: currentColor });
+            }
+            previewMode = false;
+            drawAll();
+        }
+        isDrawing = false;
+        draggingIndex = null;
+        ctx.closePath();
+    };
+
+//   document.getElementById("openCameraBtn").onclick = async () => {
+//         try {
+//             cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
+//             video.srcObject = cameraStream;
+//             video.style.display = "block";
+//             captureBtn.style.display = "inline-block";
+//             closeCameraBtn.style.display = "inline-block";
+//         } catch (err) {
+//             alert("Camera not available or permission denied.");
+//         }
+//     };
+  
+
+    // captureBtn.onclick = () => {
+    //     const tempCanvas = document.createElement("canvas");
+    //     const tempCtx = tempCanvas.getContext("2d");
+
+
+    //     tempCanvas.width = canvas.width;
+    //     tempCanvas.height = canvas.height;
+
+      
+    //     tempCtx.drawImage(video, 0, 0, tempCanvas.width, tempCanvas.height);
+
+       
+    //     const imgData = tempCanvas.toDataURL("image/png");
+    //     const img = new Image();
+
+    //     img.onload = () => {
+     
+    //         loadedImage = img;
+    //         elements = elements.filter(el => el.type !== "image");  
+    //         elements.unshift({
+    //             type: "image",
+    //             imgSrc: img.src,
+    //             x: 0,
+    //             y: 0,
+    //             width: canvas.width,
+    //             height: canvas.height
+    //         });
+    //         drawAll();
+    //         stopCamera();  
+    //     };
+
+  
+    //     img.src = imgData;
+    // };
+
+    // closeCameraBtn.onclick = () => {
+    //     stopCamera();
+    // };
+
+    // function stopCamera() {
+    //     if (cameraStream) {
+    //         cameraStream.getTracks().forEach(track => track.stop());
+    //         cameraStream = null;
+    //     }
+    //     video.style.display = "none";
+    //     captureBtn.style.display = "none";
+    //     closeCameraBtn.style.display = "none";
+    // }
+
+ 
+    document.getElementById("addTextBtn").onclick = async () => {
+        const input = document.getElementById("textInput");
+        const text = input.value.trim();
+        if (text) {
+            await fetchData();
+            pushState();
+            elements.push({ type: "text", text, x: 50, y: 50, color: currentColor });
+            drawAll();
+            input.value = "";
+        }
+    };
+
+    document.getElementById("textInput").addEventListener("keydown", e => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            document.getElementById("addTextBtn").click();
+        }
+    });
+
+    document.getElementById("addDateBtn").onclick = async () => {
+        await fetchData();
+        pushState();
+        const dateStr = new Date().toLocaleString();
+        elements.push({ type: "text", text: dateStr, x: 50, y: 100, color: currentColor });
+        drawAll();
+    };
+
+
+    // document.getElementById("imageUploader").onchange = e => {
+    //     const file = e.target.files[0];
+    //     if (!file) return;
+    //     const reader = new FileReader();
+    //     reader.onload = evt => {
+    //         const img = new Image();
+    //         img.onload = () => {
+    //             pushState();
+    //             loadedImage = img;
+    //             const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
+    //             elements = elements.filter(el => el.type !== "image");
+    //             elements.unshift({
+    //                 type: "image",
+    //                 imgSrc: img.src,
+    //                 x: 0,
+    //                 y: 0,
+    //                 width: img.width * scale,
+    //                 height: img.height * scale
+    //             });
+    //             drawAll();
+    //         };
+    //         img.src = evt.target.result;
+    //     };
+    //     reader.readAsDataURL(file);
+    // };
+
+  
+    document.getElementById("clearDraw").onclick = () => {
+        pushState();
+        elements = elements.filter(el => el.type === "image");
+        drawAll();
+    };
+
+    document.getElementById("clearImageBtn").onclick = () => {
+        pushState();
+        elements = elements.filter(el => el.type !== "image");
+        loadedImage = null;
+        drawAll();
+    };
+
+    document.getElementById("undoBtn").onclick = () => {
+        if (undoStack.length) {
+            redoStack.push(JSON.parse(JSON.stringify(elements)));
+            elements = undoStack.pop();
+            drawAll();
+        }
+    };
+
+    document.getElementById("redoBtn").onclick = () => {
+        if (redoStack.length) {
+            undoStack.push(JSON.parse(JSON.stringify(elements)));
+            elements = redoStack.pop();
+            drawAll();
+        }
+    };
+
+    // document.getElementById("downloadBtn").onclick = () => {
+    //     const a = document.createElement("a");
+    //     a.href = canvas.toDataURL("image/png");
+    //     a.download = "drawing.png";
+    //     a.click();
+    // };
+
+    async function fetchData() {
+        await getData();
+    }
+
+    function getData() {
+        return new Promise(resolve => {
+            apex.server.process('GET_IMAGE', {
+                x01: apex.item("P82_IMAGE_SERIAL_NO").getValue()
+            }, {
+                dataType: 'json',
+                success: function (pData) {
+                    const img = new Image();
+               
+                    img.onload = function () {
+                        pushState();
+                        loadedImage = img;
+                        const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
+                        elements = elements.filter(el => el.type !== "image");
+                        elements.unshift({
+                            type: "image",
+                            imgSrc: img.src,
+                            x: 0,
+                            y: 0,
+                            width: img.width * scale,
+                            height: img.height * scale
+                        });
+                        drawAll();
+                        resolve();
+                    };
+                    img.src = 'data:image/png;base64,' + pData.photobase64;
+                }
+            });
+        });
+    }
+
+    fetchData();
+})();
+
+
+//    const context = canvas.getContext('2d');
+//                 var image = new Image();
+//                 image.onload = function () {
+//                     context.drawImage(image, 0, 0, 370, 250);
+//                 };
+//                 image.src = 'data:image/png;base64,' + pData.photobase64;
+//                 console.log(pData);
+/////////////////////on Inline CSS
+/* Input field */
+input[type="text"] {
+  font-size: 16px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1.5px solid #d0d7de;
+  width: 200px;
+  transition: all 0.3s ease;
+  background-color: #fafafa;
+}
+input[type="text"]:focus {
+  border-color: #3a86ff;
+  box-shadow: 0 0 6px rgba(58,134,255,0.3);
+  outline: none;
+}
+
+/* All buttons */
+button {
+  cursor: pointer;
+  border: none;
+  /* border-radius: 10px; */
+  font-weight: 600;
+  padding: 10px 16px;
+  /* margin: 6px 6px 6px 0; */
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  /* box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05); */
+}
+
+/* Optional: Page background (light gray) */
+html, body {
+  background-color: #f5f7fa;
+  margin: 0;
+  padding: 0;
+}
+/////////////////////AJAX Call process for Get Image when dialog open
+declare 
+
+l_photo_clob clob;
+l_photo_blob blob;
+v_mrno varchar2(50);
+begin
+    APEX_JSON.OPEN_OBJECT ;
+   
+    v_mrno :=apex_application.g_x01;
+  
+    select IMAGE INTO l_photo_blob
+  FROM ORDERENTRY.PATIENT_ENCOUNTER_IMAGES PatientEncounterImages
+  where PatientEncounterImages.SR_NO||'-'||PatientEncounterImages.VISIT_SRNO=v_mrno;
+
+l_photo_clob := apex_web_service.blob2clobbase64(l_photo_blob);
+
+    APEX_JSON.WRITE( p_name  => 'photobase64' , p_value => l_photo_clob  ) ;
+
+    APEX_JSON.CLOSE_OBJECT;
+end;
+
+/////////////////////Crete DA for save Image
+///DA js Code
+apex.server.process(
+  'SAVE_PHOTO',
+  {
+    p_clob_01: drawCanvas.toDataURL().match(/,(.*)$/)[1]
+	},
+	{
+    success: function(data) {
+      
+               if (data.result == 'success') {
+                   apex.message.showPageSuccess('Image Saved Successfully');
+                   
+                    setTimeout(function() {
+                    $('#t_Alert_Success').fadeOut('fast');
+                    }, 2000);
+    
+               }
+               else
+               {
+                   alert('Unable to save image!');
+               }
+             }
+  }
+);
+/////////Ajax PLSQL code for save Image
+declare
+  l_photo_clob clob;
+  l_photo_blob blob;
+  v_max_id number;
+begin
+
+  l_photo_clob := apex_application.g_clob_01; 
+  l_photo_blob := apex_web_service.clobbase642blob( p_clob => l_photo_clob );
+
+  SELECT NVL(MAX(SR_NO), 0) + 1 INTO v_max_id FROM ORDERENTRY.PATIENT_ENCOUNTER_IMAGES;
+ insert into ORDERENTRY.PATIENT_ENCOUNTER_IMAGES (SR_NO, IMAGE, VISIT_SRNO)
+ values(v_max_id, l_photo_blob, :EN_VISIT_SRNO); 
+
+  apex_json.open_object;
+  apex_json.write(p_name => 'result', p_value => 'success');
+  apex_json.close_object;
+exception
+  when others then
+    apex_json.open_object;
+    apex_json.write(p_name => 'result',p_value => 'fail'||SQLERRM);
+    apex_json.close_object;
+end;
