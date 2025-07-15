@@ -1,0 +1,42 @@
+*************************************Display pdf, image and video in apex Page***********
+//create Application process with name (Load_files)
+//process point AJAX callback(Run this app process when req by page process)
+//paste following code in PLSQL section
+DECLARE
+VBLOB blob;
+v_mime_type varchar2(500);
+vfile_name varchar2(500);
+BEGIN
+  SELECT DB_FIELD,  --column name DB_FIELD
+CASE WHEN UPPER(FILE_TYPE) in ('PDF','XLSX','XLS','DOCS','TXT', 'DOCX', 'avi', 'MP4')
+THEN 'application/'|| UPPER(FILE_TYPE)   --column name FILE_TYPE
+WHEN UPPER(FILE_TYPE) in ('JPG','PNG','JPEG')
+THEN 'image/'|| UPPER(FILE_TYPE)
+WHEN UPPER(FILE_TYPE) in ('avi','MP4')
+THEN 'video/'|| UPPER(FILE_TYPE)
+
+END , FILE_NAME  --column name FILE_NAME
+INTO VBLOB, v_mime_type, vfile_name
+FROM SECURITY.DOCUMENTS_STORE
+WHERE ID = V('P199_SEQ_ID') ; --AND EGUIDED_ID=V('P199_GUIDED_ID');/* your item name*/
+OWA_UTIL.MIME_HEADER(v_mime_type,FALSE);
+  HTP.P('Content-Length: ' || DBMS_LOB.GETLENGTH(VBLOB)); 
+  HTP.P('Content-Disposition: filename="' || vfile_name || '"');
+  OWA_UTIL.HTTP_HEADER_CLOSE;
+  WPG_DOCLOAD.DOWNLOAD_FILE(VBLOB);
+  
+/*owa_util.mime_header(v_mime_type,false);
+htp.p('Content-Length: ' || dbms_lob.getlength(v_Blob));
+owa_util.http_header_close;
+wpg_docload.download_file(v_Blob);*/
+exception
+when no_data_found then
+null;
+END;
+//////////////////////////////////////
+///create 199 page and one item with name seq_id and one region with Type URL
+//in this region attribute section add this in URL 
+f?p=&APP_ID.:0:&SESSION.:APPLICATION_PROCESS=Load_files:NO
+//select IFrame
+//Iframe attribute
+style="width:100%; height:850px"
