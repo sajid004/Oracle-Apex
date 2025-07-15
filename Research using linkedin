@@ -686,6 +686,78 @@ window.addEventListener("load", () => {
  }
  });
 });
+**********************Another Method Opening Multiple Tabs in Oracle APEX *******************
+//onpage level js or global js
+// hard overlay
+function showCustomLinger(config) {
+    let overlay$ = $('#hardoverlay');
+    if (overlay$.length) {
+        //dark
+        if (config?.dark === true) overlay$.addClass('dark');
+        else overlay$.removeClass('dark');
+
+        $('#hardoverlay').show();
+        document.body.style.cursor = 'wait';
+        //document.body.style.pointerEvents = 'none';
+        //console.log('Cursoer:'+document.body.style.pointerEvents);
+        overlay$.show();
+        //auto clear
+        if (config?.autoClearSeconds) setTimeout(clearCustomLinger, config.autoClearSeconds * 1000);
+    }
+}
+function clearCustomLinger() {
+    $('#hardoverlay').hide();
+    document.body.style.cursor = 'default';
+    //document.body.style.pointerEvents = 'unset';
+    //console.log('Cursoer:'+document.body.style.pointerEvents);
+}
+function addDuplicateOverlay() {
+    const $overlay = $('<div>', {
+        id: 'duplicate-overlay',
+        css: {
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'rgba(0, 0, 0, 0.2)',
+            zIndex: 9999,
+            display: 'none',
+            cursor: 'not-allowed',
+            userSelect: 'none'
+        },
+    });
+    $overlay.on('contextmenu', function (e) {
+        e.preventDefault();
+    });
+    const $text = $('<div>', {
+        id: 'overlay-text',
+        text: 'Duplicate Screen',
+        css: {
+            background: '#d63b25',
+            padding: '0.75rem',
+            width: '100%',
+            color: 'white',
+            fontSize: '1.5rem',
+            fontWeight: 'bold',
+            textAlign: 'center'
+        },
+    });
+    $overlay.append($text);
+    $('body').append($overlay);
+    $overlay.fadeIn();
+    window.apex = undefined;
+}
+$(document).ready(() => {
+
+    if (window === window.top && !$('body.duplicate-allowed').length) {
+        const channel = new BroadcastChannel('tab');
+        channel.postMessage(`another-tab@${apex.env.APP_ID}#${apex.env.APP_PAGE_ID}`);
+        channel.addEventListener('message', (msg) => {
+            if (msg.data === `another-tab@${apex.env.APP_ID}#${apex.env.APP_PAGE_ID}` && !$('#duplicate-overlay').length) addDuplicateOverlay();
+        });
+    }
+});
 ***************************************************************************************
 ***********************************Select & Copy Rows in Oracle APEX IR with Checkboxes!
 /// Steps to Implement:
