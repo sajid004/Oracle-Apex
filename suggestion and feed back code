@@ -147,3 +147,75 @@ END IF;
      APEX_ERROR.ADD_ERROR(P_MESSAGE          => SQLERRM,
                          P_DISPLAY_LOCATION => APEX_ERROR.C_INLINE_IN_NOTIFICATION);
 end;
+**************************************************Sugeestion report for view image and remarks
+//create classic report with static id (zoom_report) as following 
+//blob_size set as display image and set table and column
+SELECT 
+    us.mrno,
+    us.suggestion_date,
+    us.suggestiont_detail AS remark,
+    d.document_name,
+    dbms_lob.getlength(d.db_field) AS blob_size, 
+    d.document_id
+FROM 
+    HIS.USER_SUGGESTIONS US,
+    HIS.USER_SUGGESTION_DTL UD,
+    LOB.DOCUMENTS_STORE D
+WHERE 
+    US.SUGGESTION_ID = UD.SUGGESTION_ID(+)
+    AND UD.DOCUMENT_ID = D.DOCUMENT_ID(+)
+    AND us.mrno = :P806_MRNO
+ORDER BY 
+    US.SUGGESTION_DATE DESC;
+********************************************************/////////////////add following code in page level js
+function attachZoomClick(regionId) {
+  const region = document.getElementById(regionId);
+  if (!region) return;
+
+  region.querySelectorAll("img").forEach(function (img) {
+    img.style.cursor = "pointer";
+
+    img.addEventListener("click", function () {
+      const $dialog = $("<div>").html(`
+        <div style="text-align:center;">
+          <img src="${img.src}" style="max-width:100%; max-height:80vh;" />
+        </div>
+      `);
+
+      $dialog.dialog({
+        title: "Zoom Image",
+        modal: true,
+        resizable: false,
+        draggable: false,
+        width: $(window).width() < 600 ? "90%" : "auto",  // responsive width
+        position: {
+          my: "center center",
+          at: "center center",
+          of: window
+        },
+        open: function () {
+          $('.ui-widget-overlay').css('opacity', 0.5); // optional dim background
+        },
+        close: function () {
+          $(this).dialog("destroy").remove();
+        }
+      });
+    });
+  });
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  attachZoomClick("zoom_report");
+});
+
+$(document).on("apexafterrefresh", "#zoom_report", function () {
+  attachZoomClick("zoom_report");
+});
+/////////////////////add css
+td[headers="BLOB_SIZE"] img { 
+  vertical-align: middle;
+  border:4px solid #CCC;
+  border-radius: 4px;
+  height:75px; 
+  width:75px; 
+}
