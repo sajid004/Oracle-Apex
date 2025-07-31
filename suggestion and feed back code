@@ -1,0 +1,149 @@
+//this code from mobile app feed back form
+//create region with items file browse (multiple file on) and remark and one button
+//create one region for preview images with static id (previewContainer)
+//add folowing code in page level for preview image
+document.getElementById("P804_UPLOAD_IMAGE").addEventListener("change", function (e) {
+  const preview = document.getElementById("previewContainer");
+  preview.innerHTML = ""; // Clear previous previews
+
+  const fileInput = e.target;
+  const dt = new DataTransfer();
+
+  // Store selected files globally for easy management
+  window.selectedFiles = Array.from(fileInput.files);
+
+  window.selectedFiles.forEach((file) => {
+    if (!file.type.startsWith("image/")) return;
+
+    const reader = new FileReader();
+    reader.onload = function (event) {
+      const wrapper = document.createElement("div");
+      wrapper.style.position = "relative";
+      wrapper.style.display = "inline-block";
+
+      const img = document.createElement("img");
+      img.src = event.target.result;
+      img.style.height = "100px";
+      img.style.margin = "5px";
+      img.style.border = "1px solid #ccc";
+      img.style.borderRadius = "4px";
+
+      const closeBtn = document.createElement("span");
+      closeBtn.textContent = "×";
+      closeBtn.style.position = "absolute";
+      closeBtn.style.top = "4px";
+      closeBtn.style.right = "6px";
+      closeBtn.style.cursor = "pointer";
+      closeBtn.style.background = "#ff0000";
+      closeBtn.style.color = "#fff";
+      closeBtn.style.padding = "0px 6px";
+      closeBtn.style.fontSize = "12px";
+      closeBtn.title = "Remove image";
+
+      closeBtn.addEventListener("click", function () {
+        wrapper.remove();
+        removeFileByName(file.name);
+      });
+
+      wrapper.appendChild(img);
+      wrapper.appendChild(closeBtn);
+      preview.appendChild(wrapper);
+    };
+    reader.readAsDataURL(file);
+  });
+});
+
+function removeFileByName(fileName) {
+  const fileInput = document.getElementById("P804_UPLOAD_IMAGE");
+  const dt = new DataTransfer();
+
+  // Remove the file from our global list
+  window.selectedFiles = window.selectedFiles.filter(file => file.name !== fileName);
+
+  // Add the remaining files back to a new DataTransfer object
+  window.selectedFiles.forEach(file => dt.items.add(file));
+
+  // Replace input's file list
+  fileInput.files = dt.files;
+
+  // Trigger internal UI update (this is the key part for APEX to detect changes)
+  fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+}
+**////////////////////////////////add css
+/* Main container fills screen */
+#P804_REMARKS {
+  height: calc(100vh - 310px);
+  min-height: 150px;
+  max-height: 80vh;
+  resize: none;
+  overflow: auto;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+#btn-ext{
+    padding-inline: 25px;
+}
+
+
+#previewContainer {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  gap: 10px;
+}
+***//////////////////////////////add process code
+declare
+ V_DOCUMENT_ID       LOB.DOCUMENTS_STORE.DOCUMENT_ID%TYPE;
+ V_ALERT_TEXT        VARCHAR2(4000);  
+ V_MAX_SUGG_ID       NUMBER;     
+ P_error             exception ;
+v_mul_files          apex_t_varchar2;
+v_file apex_application_temp_files%rowtype;
+Begin
+IF :P804_UPLOAD_IMAGE IS NOT NULL OR :P804_REMARKS IS NOT NULL THEN
+   SELECT NVL(MAX(suggestion_id), 0) + 1 INTO V_MAX_SUGG_ID FROM his.user_suggestions;
+
+   Insert into his.user_suggestions (SUGGESTION_ID, MRNO, SUGGESTION_DATE, SUGGESTIONT_DETAIL)
+   values (V_MAX_SUGG_ID,:GV_USER_MRNO, SYSDATE, :P804_REMARKS);
+
+v_mul_files := apex_string.split (p_str => :P804_UPLOAD_IMAGE, p_sep => ':' );
+
+for i in 1..v_mul_files.count loop
+BEGIN
+   V_DOCUMENT_ID := LOB.F_NEXT_COUNTER(P_COUNTER_TYPE => 'LOB.DOCUMENTS_STORE.DOCUMENT_ID',
+                                        P_WHERE_CLAUSE   => NULL,
+                                        P_LOCATION_ID    => :GV_LOCATION_ID,
+                                        P_CALLING_OBJECT => 'APEX',
+                                        P_CALLING_USER   => :GV_USER_MRNO,
+                                        P_CALLING_EVENT  => NULL,
+                                        P_ERROR          => V_ALERT_TEXT);  
+                                     IF V_ALERT_TEXT IS NOT NULL THEN
+                                     V_ALERT_TEXT := V_ALERT_TEXT;
+                                    RAISE P_error;
+                                    END IF;                                               
+END;
+
+select *
+into v_file
+from apex_application_temp_files
+where name = v_mul_files(i);
+
+Insert into LOB.DOCUMENTS_STORE(DOCUMENT_ID, DOCUMENT_NAME, DOCUMENT_TYPE, STORAGE_TYPE, DB_FIELD, OBJECT_CODE, LOCATION_ID, ORGANIZATION_ID)
+values(V_DOCUMENT_ID, v_file.filename ,v_file.mime_type, 'DB', v_file.blob_content, 'S25APX00185', :GV_LOCATION_ID, :GV_ORGANIZATION_ID);
+
+Insert into his.user_suggestion_dtl(SUGGESTION_ID, DOCUMENT_ID)
+values (V_MAX_SUGG_ID, V_DOCUMENT_ID);
+end loop;
+ APEX_APPLICATION.G_PRINT_SUCCESS_MESSAGE := '<span style="color : white ">Submitted Successfully.</span>';
+ELSE
+V_ALERT_TEXT := 'Please  Select Image or enter remarks.';
+RAISE P_error;
+END IF;
+ EXCEPTION
+ WHEN P_error THEN
+  APEX_ERROR.ADD_ERROR(P_MESSAGE => V_ALERT_TEXT, P_DISPLAY_LOCATION => APEX_ERROR.C_INLINE_IN_NOTIFICATION);
+   WHEN OTHERS THEN
+     APEX_ERROR.ADD_ERROR(P_MESSAGE          => SQLERRM,
+                         P_DISPLAY_LOCATION => APEX_ERROR.C_INLINE_IN_NOTIFICATION);
+end;
