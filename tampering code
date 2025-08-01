@@ -1,0 +1,178 @@
+********//create dynamic content with following code
+DECLARE
+  cursor cur_dosages is
+    SELECT C001 AS DOSAGE_ID,
+           C002 AS DOSAGE
+      FROM apex_collections
+     WHERE collection_name = 'TEMPERING_COLLECTION'
+     ORDER BY C001;
+
+  v_duration       NUMBER := NVL(:P71_DURATION, 1); --5 its days
+  v_frequency      NUMBER := NVL(:P71_FREQUENCE, 1); --00103
+  v_dosage_default VARCHAR2(200) := :P71_DOSAGE; --500
+
+  v_has_data       BOOLEAN := FALSE;
+  v_dosage_id      VARCHAR2(200);
+  v_dosage_val     VARCHAR2(200);
+  v_cell_id        NUMBER := 0;
+  v_counter        NUMBER := 0;
+  v_hour_step      NUMBER;
+  v_date           DATE := SYSDATE;
+  v_count          NUMBER := 0;
+BEGIN
+  IF apex_collection.collection_exists('TEMPERING_COLLECTION') AND 
+     apex_collection.collection_member_count('TEMPERING_COLLECTION') > 0 THEN
+    v_has_data := TRUE;
+  END IF;
+
+  htp.p('<input type="hidden" id="my_dur_id" value="' || v_duration || '">');
+  htp.p('<table border="1" cellpadding="5" cellspacing="0">');
+  htp.p('<tr>');
+  htp.p('<th style="background:#3498DB; color:white;">Date</th>');
+
+  v_hour_step := 24 / v_frequency;
+  FOR h IN 1..v_frequency LOOP
+    v_counter := v_counter + v_hour_step;
+    htp.p('<th style="background:#85C1E9; color:#154360;">' || LPAD(v_counter, 2, '0') || ':00</th>');
+  END LOOP;
+  htp.p('</tr>');
+
+  FOR d IN 1..v_duration LOOP
+    htp.p('<tr>');
+    htp.p('<td><input type="text" class="my-d_date" value="' || TO_CHAR(v_date, 'DD-MON-YYYY') || '" readonly style="width:100px;"></td>');
+
+    v_counter := 0; -- Reset for each day
+    FOR i IN 1..v_frequency LOOP
+      v_cell_id := v_cell_id + 1;
+      v_counter := v_counter + v_hour_step;
+
+      IF v_has_data THEN
+        v_count := 0;
+        FOR r IN cur_dosages LOOP
+          v_count := v_count + 1;
+          IF v_count = v_cell_id THEN
+            v_dosage_id := r.DOSAGE_ID;
+            v_dosage_val := r.DOSAGE;
+            EXIT;
+          END IF;
+        END LOOP;
+      ELSE
+        v_dosage_id := d * 100 + i;
+        v_dosage_val := v_dosage_default;
+      END IF;
+
+      htp.p('<td style="text-align:center;">');
+      htp.p('<input type="hidden" class="my-dosid" value="' || v_dosage_id || '">');
+      htp.p('<input type="text" class="my-dosid" value="' || v_dosage_val || '" style="width:35px;">');
+      htp.p('<input type="hidden" class="my-time" value="' || LPAD(v_counter, 2, '0') || ':00">');
+      htp.p('<input type="hidden" class="my-date" value="' || TO_CHAR(v_date, 'DD-MON-YYYY') || '">');
+      htp.p('</td>');
+    END LOOP;
+
+    htp.p('</tr>');
+    v_date := v_date + 1;
+  END LOOP;
+
+  htp.p('</table>');
+  return '';
+END;
+*****************************////////////create button with DA to save record (js code)
+var rows = [];
+var doseId, doseValue, doseTime, doseDate;
+
+$('.my-dosid').each(function(index){
+    var inputType = index % 2;
+    if (inputType === 0) {
+        doseId = $(this).val();
+    } else {
+        doseValue = $(this).val();
+        var $td = $(this).closest('td');
+        doseTime = $td.find('.my-time').val();
+        doseDate = $td.find('.my-date').val();
+
+        rows.push({
+            id: doseId,
+            value: doseValue,
+            time: doseTime,
+            date: doseDate
+        });
+    }
+});
+
+apex.server.process("BULK_INSERT_TAPERING", {
+    x01: JSON.stringify(rows),
+    x02: $('#my_dur_id').val()
+}, {
+    dataType: 'json',
+    success: function(pData){
+        if (pData.status === "success") {
+            apex.message.showPageSuccess("All records saved");
+        } else {
+            apex.message.alert(pData.message);
+        }
+    }
+});
+********************************///////////AJAX PLSQL Code
+DECLARE
+    l_rows         VARCHAR2(32767) := APEX_APPLICATION.G_X01;
+    l_duration     VARCHAR2(100)   := APEX_APPLICATION.G_X02;
+    l_dosage_id    VARCHAR2(100);
+    l_dosage_value VARCHAR2(100);
+    l_dose_time    VARCHAR2(100);
+    l_dose_date    VARCHAR2(100);
+    l_seq_id       NUMBER;
+BEGIN
+    IF apex_collection.collection_exists('TEMPERING_COLLECTION') THEN
+       apex_collection.truncate_collection('TEMPERING_COLLECTION');
+        else
+          apex_collection.create_collection('TEMPERING_COLLECTION');
+    END IF;
+
+    apex_json.parse(p_source => l_rows);
+
+    FOR i IN 1 .. apex_json.get_count(p_path => '.') LOOP
+        l_dosage_id    := orderentry.pkg_patient_encounter.f_get_patient_dosage_no(p_location_id => :GV_LOCATION_ID); 
+        l_dosage_value := apex_json.get_varchar2(p_path => '[' || i || '].value');
+        l_dose_time    := apex_json.get_varchar2(p_path => '[' || i || '].time');
+        l_dose_date    := apex_json.get_varchar2(p_path => '[' || i || '].date');
+
+        BEGIN
+            SELECT seq_id
+              INTO l_seq_id
+              FROM apex_collections
+             WHERE collection_name = 'TEMPERING_COLLECTION'
+               AND c001 = l_dosage_id;
+
+            apex_collection.update_member(
+                p_collection_name => 'TEMPERING_COLLECTION',
+                p_seq             => l_seq_id,
+                p_c001            => l_dosage_id,
+                p_c002            => l_dosage_value,
+                p_c003            => l_duration,
+                p_c004            => l_dose_time,
+                p_c005            => l_dose_date
+            );
+        EXCEPTION
+            WHEN NO_DATA_FOUND THEN
+                apex_collection.add_member(
+                    p_collection_name => 'TEMPERING_COLLECTION',
+                    p_c001            => l_dosage_id,
+                    p_c002            => l_dosage_value,
+                    p_c003            => l_duration,
+                    p_c004            => l_dose_time,
+                    p_c005            => l_dose_date
+                );
+        END;
+    END LOOP;
+
+    apex_json.open_object;
+    apex_json.write('status', 'success');
+    apex_json.close_object;
+
+EXCEPTION
+    WHEN OTHERS THEN
+        apex_json.open_object;
+        apex_json.write('status', 'error');
+        apex_json.write('message', SQLERRM);
+        apex_json.close_object;
+END;
