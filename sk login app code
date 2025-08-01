@@ -1,0 +1,135 @@
+*************************************************************************//display count down on home page
+///////creeate region dynamic content and pase follwoing code
+DECLARE
+  v_result     CLOB;
+  v_end_raw    VARCHAR2(100);
+  v_end_date   DATE;
+  v_title_text VARCHAR2(200);
+  v_seconds_remaining NUMBER;
+BEGIN
+  -- Get countdown end date
+  v_end_raw := DEFINITIONS.PKG_COMMON.GET_CONSTANT_VALUE(
+                  P_CONSTANT_ID     => 892,
+                  P_ORGANIZATION_ID => :GV_ORGANIZATION_ID,
+                  P_LOCATION_ID     => :GV_LOCATION_ID,
+                  P_DEFAULT_VAL     => NULL);
+
+  -- Get countdown title
+  v_title_text := DEFINITIONS.PKG_COMMON.GET_CONSTANT_VALUE(
+                    P_CONSTANT_ID     => 1142,
+                    P_ORGANIZATION_ID => :GV_ORGANIZATION_ID,
+                    P_LOCATION_ID     => :GV_LOCATION_ID,
+                    P_DEFAULT_VAL     => 'Time Remaining');
+
+  -- Parse date and calculate seconds remaining
+  BEGIN
+    v_end_date := TO_DATE(v_end_raw, 'DD-MON-RRRR HH24:MI');
+    v_seconds_remaining := ROUND((v_end_date - SYSDATE) * 24 * 60 * 60); -- total seconds
+  EXCEPTION
+    WHEN OTHERS THEN
+      v_seconds_remaining := 0;
+  END;
+
+  -- Generate HTML + JS
+  v_result := q'[
+
+  <div class="ticker-container">
+    <div class="ticker-title">]' || v_title_text || q'[</div>
+    <div class="ticker" id="ticker">
+      <div class="ticker-item">
+        <div class="ticker-value" id="days">00</div>
+        <div class="ticker-label">Days</div>
+      </div>
+      <div class="ticker-item">
+        <div class="ticker-value" id="hours">00</div>
+        <div class="ticker-label">Hours</div>
+      </div>
+      <div class="ticker-item">
+        <div class="ticker-value" id="minutes">00</div>
+        <div class="ticker-label">Minutes</div>
+      </div>
+      <div class="ticker-item">
+        <div class="ticker-value" id="seconds">00</div>
+        <div class="ticker-label">Seconds</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let totalSeconds = ]' || v_seconds_remaining || q'[;
+
+    function updateCountdown() {
+      if (totalSeconds < 0) totalSeconds = 0;
+
+      const days = Math.floor(totalSeconds / (24 * 3600));
+      const hours = Math.floor((totalSeconds % (24 * 3600)) / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+
+      document.getElementById("days").textContent = String(days).padStart(2, "0");
+      document.getElementById("hours").textContent = String(hours).padStart(2, "0");
+      document.getElementById("minutes").textContent = String(minutes).padStart(2, "0");
+      document.getElementById("seconds").textContent = String(seconds).padStart(2, "0");
+
+      totalSeconds--;
+    }
+
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+  </script>
+
+  <style>
+   .ticker-container {
+  background: #ffffff;
+  border-radius: 16px;
+  /* box-shadow removed */
+  padding: 5px 50px;
+  text-align: center;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.ticker-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: red;
+  margin-bottom: 20px;
+}
+
+.ticker {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+}
+
+.ticker-item {
+  background: #f6f9fc;
+  border-radius: 12px;
+  padding: 20px 30px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* outer shadow */
+  width: 120px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.ticker-value {
+  font-size: 36px;
+  font-weight: bold;
+  color: #0077b6;
+  margin-bottom: 5px;
+  transition: all 0.3s ease-in-out;
+}
+
+.ticker-label {
+  font-size: 16px;
+  color: #666;
+  border-radius: 4px;
+  padding: 2px 4px;
+}
+  </style>
+
+  ]';
+
+  RETURN v_result;
+END;
+
