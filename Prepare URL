@@ -1,4 +1,14 @@
-//////////////////////using page item///////////////////////////
+///////////////////////url using js////////////////////////////
+//create DA and paste following code
+if (apex.item("P81_MRNO").getValue()==null|apex.item("P81_MRNO").getValue()=="") {
+alert('Mrno must be saved before document attachment');
+return;
+
+}else{
+    apex.navigation.redirect("f?p=&APP_ID.:85:&APP_SESSION.::NO::P85_MRNO:&P81_MRNO.");
+}
+
+//////////////////////using page item and PLSQL Code///////////////////////////
 declare
 l_url varchar2(2000);
 BEGIN
