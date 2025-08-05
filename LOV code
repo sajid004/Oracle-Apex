@@ -1,0 +1,6 @@
+/////******************************************************************************************
+///////////create two lov parent and child and change event call DA of parent lov and paste code
+let r = apex.item('P1_NEW').getValue() //parent lov
+let d = apex.item('P1_NEW').displayValueFor(r)  //parent lov
+apex.item('P1_NEW_1').setValue(r, d)  //child lov
+/////******************************************************************************************
