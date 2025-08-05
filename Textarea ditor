@@ -1,0 +1,52 @@
+//add css class in advance section of IG column remarks
+s22-show-editor
+//create inline dialog as editor text with three items and one button
+P32_EDITOR_TEXT, P32_EDITOR_SOURCE, P32_IS_IN_GRID
+//add button ok with DA js code as following
+close_editor(this);
+//////////////////////////////////////////////add followng code in page level Function and Global Variable Declaration
+// Global functions
+function open_editor(fieldId, inGrid) {
+    // Open the editor modal and set value from the field
+    apex.item("P32_EDITOR_TEXT").setValue($v(fieldId)); // Set value in the editor
+    apex.item("P32_EDITOR_SOURCE").setValue(fieldId);   // Store the source field's ID
+    apex.item("P32_IS_IN_GRID").setValue(inGrid);        // Mark if inside a grid
+
+    // Open the modal (dialog)
+    $("#s22_editor").dialog("open");
+}
+
+function close_editor() {
+    var t = $("#s22_editor");
+    
+    // Save changes and close the editor modal
+    apex.item($v("P32_EDITOR_SOURCE")).setValue($v("P32_EDITOR_TEXT"));
+    t.dialog("close");
+
+    // Focus back on the appropriate element
+    if ("true" == $v("P32_IS_IN_GRID")) {
+        $(window.lastFocusedTd).focus(); // If grid-based, focus back on grid cell
+    } else {
+        apex.item($v("P32_EDITOR_SOURCE")).setFocus(); // Otherwise, set focus on source field
+    }
+}
+///////////////////////////////////////////////////////////////Execute when Page Loads on page level
+$(document).ready(function () {
+    // Ensure jQuery UI Dialog is initialized correctly
+    $("#s22_editor").dialog({
+        autoOpen: false,
+        modal: true,
+        width: 500,
+        height: 400,
+        resizable: false
+    });
+
+    // Button creation for editor
+    $(".s22-show-editor").each(function () {
+        var n = $(this).attr("id"),
+            o = !!$(this).parents(".a-GV-columnItem").length; // Check if it's in a grid
+        var button = $('<button class="t-Button t-Button--noLabel t-Button--icon t-Button--tiny t-Button--hoverIconPush s22-btn-edit" onclick="open_editor(\'' + n + '\',' + o + ');" type="button" title="Edit"><span aria-hidden="true" class="fa fa-edit"></span></button>');
+        button.attr("id", "EDIT-" + n);
+        //   $(this).parent().append(button); // Append the edit button next to the field
+    });
+});
