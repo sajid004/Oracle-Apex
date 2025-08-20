@@ -1,0 +1,11 @@
+//to kill apex session to add following code in process
+  begin
+  for rec in (select t.apex_session_id
+                from APEX_WORKSPACE_SESSIONS t, hrd.vu_information i
+               where t.user_name = '00160000010044'
+               and t.user_name = i.MRNO 
+                 and i.ACTIVE = 'Y'
+                 and i.DEPARTMENT_ID = :GV_USER_DEPARTMENT_ID) loop
+    apex_session.delete_session(p_session_id => rec.apex_session_id);
+ end loop;
+end;
