@@ -1,4 +1,5 @@
 ///////////////////////url using js////////////////////////////
+ apex.navigation.redirect("f?p=227:510:&APP_SESSION.");
 //create DA and paste following code
 if (apex.item("P81_MRNO").getValue()==null|apex.item("P81_MRNO").getValue()=="") {
 alert('Mrno must be saved before document attachment');
