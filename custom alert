@@ -9,3 +9,48 @@ apex.message.alert( "Load complete.", function(){
 
 } );
 
+//////////////////////////////////jS////////////////////////////////////////////////////////////
+$('<div class="custom-alert">Your password is about to expire. Do you want to change it now?</div>').dialog({
+    title: "Password Alert",
+    modal: true,
+    width: 400, // control width
+    buttons: {
+        "OK": function () {
+            $(this).dialog("close");
+        },
+        "Change Password": function () {
+            $(this).dialog("close");
+            apex.navigation.redirect("f?p=&APP_ID.:50:&SESSION."); 
+        }
+    },
+    open: function () {
+        $(".ui-dialog-titlebar-close", $(this).parent()).hide(); // hide [x] close button if you want
+    }
+});
+/////////css////////
+/* Add padding inside the dialog content */
+.custom-alert {
+    padding: 15px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* Style the dialog box */
+.ui-dialog {
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+/* Style the title bar */
+.ui-dialog-titlebar {
+    background: #005cb9;
+    color: #fff;
+    font-weight: bold;
+    border: none;
+}
+
+/* Style buttons */
+.ui-dialog-buttonpane button {
+    padding: 6px 14px;
+    border-radius: 6px;
+}
