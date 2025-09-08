@@ -24,7 +24,9 @@ $('<div class="custom-alert">Your password is about to expire. Do you want to ch
         }
     },
     open: function () {
+$(this).parent().find(".ui-dialog-buttonpane button:last").focus();
         $(".ui-dialog-titlebar-close", $(this).parent()).hide(); // hide [x] close button if you want
+//$(this).parent().find(".ui-dialog-buttonpane button").blur();
     }
 });
 /////////css////////
