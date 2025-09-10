@@ -1,0 +1,56 @@
+//convert image into png to jpeg
+//add follwoing in file upload item change
+/////////////////////////////////
+var fileInput = document.getElementById("P95_LOGO_UPLOAD");
+var file = fileInput.files[0];
+if (file && (file.type === "image/png" || file.type === "image/jpeg")) {
+    var img = new Image();
+    img.onload = function () {
+        var canvas = document.createElement("canvas");
+        var ctx = canvas.getContext("2d");
+        // 🔹 Set max logo size (adjust as needed)
+        var maxWidth = 300;
+        var maxHeight = 100;
+        var width = img.width;
+        var height = img.height;
+        // 🔹 Maintain aspect ratio while resizing
+        if (width > maxWidth || height > maxHeight) {
+            var ratio = Math.min(maxWidth / width, maxHeight / height);
+            width = width * ratio;
+            height = height * ratio;
+        }
+        canvas.width = width;
+        canvas.height = height;
+        // 🔹 Draw resized image
+        ctx.drawImage(img, 0, 0, width, height);
+        // 🔹 Convert canvas → Base64 JPEG (quality 0.7 for compression)
+        var jpegBase64 = canvas.toDataURL("image/jpeg", 0.7);
+        // 🔹 Remove prefix: "data:image/jpeg;base64,"
+        jpegBase64 = jpegBase64.split(",")[1];
+        // 🔹 Store in hidden item for DB insert
+        $s("P95_CONVERTED_IMAGE", jpegBase64);
+        console.log("Image converted, resized & stored in P95_CONVERTED_IMAGE ✅");
+    };
+    img.src = URL.createObjectURL(file);
+} else {
+    alert("Only PNG or JPG images are allowed!");
+    fileInput.value = ""; // reset
+}
+///////////////////////process code
+declare
+-- l_photo   blob;
+l_blob   blob;
+begin
+--   select  blob_content into l_photo
+--                 from apex_application_temp_files WHERE rownum=1;
+l_blob := apex_web_service.clobbase642blob(:P95_CONVERTED_IMAGE);
+        UPDATE HIS.LOGIN_FORM_SETUP
+        SET LOGO = l_blob
+        WHERE SETUP_ID = :P95_SETUP_ID;
+  delete from apex_application_temp_files;
+  commit;
+exception
+  when others then
+    delete from apex_application_temp_files;
+    raise;
+end;
